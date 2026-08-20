@@ -14,8 +14,10 @@
 - `matplotlib`: `3.10.7+dfsg1`
 - `rclpy`: `ROS 2 Lyrical` system package
 - `rosbag2_py`: `ROS 2 Lyrical` system package
-- `evo`: `1.31.0`
-- `scipy`: `1.15.2`
+- `evo`: `1.37.0`
+- `scipy`: `1.18.0`
+- `rosbags`: `0.11.5`
+- `seaborn`: `0.13.2`
 
 ## Reproducibility & Build Rules
 - All scripts rely strictly on the pinned environment specifications above.

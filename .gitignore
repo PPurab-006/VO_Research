@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# ROS 2 Build / Install / Log outputs
+build/
+install/
+log/
+
+# Large binaries & data logs
+*.mcap
+*.db3
+*.bag
+*.pcd
+*.ply
+
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/

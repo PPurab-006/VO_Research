@@ -96,6 +96,29 @@ class MinimalVO(Node):
         self.frame_idx = 0
         self.records = []
 
+        # State Variables
+        self.bridge = CvBridge() if HAS_CV_BRIDGE else None
+        self.prev_img = None
+        self.prev_pts = None   # For KLT mode
+        self.prev_kp = None    # For ORB mode
+        self.prev_des = None   # For ORB mode
+
+        # Cumulative World Pose (ENU Frame): Position 3x1, Orientation 3x3 Matrix
+        self.curr_pos = np.zeros((3, 1), dtype=np.float64)
+        self.curr_rot = np.eye(3, dtype=np.float64)
+
+        self.frame_idx = 0
+        self.records = []
+        self.frame_history = []  # History buffer of (timestamp_total_sec, num_inliers)
+
+        # Failure Characterization Variables
+        self.consecutive_low_inliers = 0
+        self.failure_triggered_streak = False
+        self.failure_first_frame_streak = None
+
+        self.failure_triggered_window = False
+        self.failure_first_frame_window = None
+
         # ROS 2 Publishers
         self.pose_pub = self.create_publisher(PoseStamped, '/vo/pose', 10)
         self.path_pub = self.create_publisher(Path, '/vo/path', 10)
@@ -128,20 +151,56 @@ class MinimalVO(Node):
         num_detected = 0
         num_matched = 0
         num_inliers = 0
+        num_inliers_E = 0
+        num_inliers_pose = 0
         inlier_ratio = 0.0
+        survival_rate = 0.0
+        vel_mean = 0.0
+        vel_max = 0.0
+        mean_lk_err = 0.0
+        num_inliers_H = 0
         rel_tx, rel_ty, rel_tz = 0.0, 0.0, 0.0
         rel_rot_deg = 0.0
 
         if self.mode == 'klt':
-            num_detected, num_matched, num_inliers, inlier_ratio, rel_tx, rel_ty, rel_tz, rel_rot_deg = self._process_klt(cv_img)
+            num_detected, num_matched, num_inliers, num_inliers_E, num_inliers_pose, inlier_ratio, survival_rate, vel_mean, vel_max, mean_lk_err, num_inliers_H, rel_tx, rel_ty, rel_tz, rel_rot_deg = self._process_klt(cv_img)
         else:
-            num_detected, num_matched, num_inliers, inlier_ratio, rel_tx, rel_ty, rel_tz, rel_rot_deg = self._process_orb(cv_img)
+            num_detected, num_matched, num_inliers, num_inliers_E, num_inliers_pose, inlier_ratio, mean_lk_err, num_inliers_H, rel_tx, rel_ty, rel_tz, rel_rot_deg = self._process_orb(cv_img)
+            survival_rate = float(num_matched / num_detected) if num_detected > 0 else 0.0
+
+        # Update failure condition 1: Consecutive streak (inlier count < 5 for 10+ consecutive frames)
+        if num_inliers < 5:
+            self.consecutive_low_inliers += 1
+        else:
+            self.consecutive_low_inliers = 0
+
+        if self.consecutive_low_inliers >= 10:
+            self.failure_triggered_streak = True
+            if self.failure_first_frame_streak is None:
+                self.failure_first_frame_streak = self.frame_idx
+                self.get_logger().warning(
+                    f"[STREAK FAILURE TRIGGERED] Frame #{self.frame_idx}: num_inliers < 5 for {self.consecutive_low_inliers} consecutive frames!"
+                )
+
+        # Update failure condition 2: Robust 2.0s Sliding Window (>70% of frames in prior 2.0s have num_inliers < 5)
+        self.frame_history.append((total_sec, num_inliers))
+        win_frames = [item for item in self.frame_history if (total_sec - item[0]) <= 2.0]
+        low_inl_count = sum(1 for item in win_frames if item[1] < 5)
+        window_low_inlier_pct = float(low_inl_count / len(win_frames)) * 100.0 if len(win_frames) > 0 else 0.0
+
+        if window_low_inlier_pct > 70.0:
+            self.failure_triggered_window = True
+            if self.failure_first_frame_window is None:
+                self.failure_first_frame_window = self.frame_idx
+                self.get_logger().warning(
+                    f"[WINDOW FAILURE TRIGGERED] Frame #{self.frame_idx}: {window_low_inlier_pct:.1f}% low-inlier frames in 2.0s window!"
+                )
 
         # Convert rotation matrix to quaternion (x, y, z, w)
         r = R_scipy.from_matrix(self.curr_rot)
         quat_xyzw = r.as_quat()
 
-        # Save frame record for CSV
+        # Save frame record for CSV (explicitly separating num_inliers_E and num_inliers_pose)
         record = {
             'frame_idx': self.frame_idx,
             'timestamp_sec': sec,
@@ -156,8 +215,19 @@ class MinimalVO(Node):
             'rot_w': quat_xyzw[3],
             'num_detected': num_detected,
             'num_matched': num_matched,
-            'num_inliers': num_inliers,
+            'num_inliers': num_inliers,              # Backward compatibility: num_inliers == num_inliers_E
+            'num_inliers_E': num_inliers_E,          # Essential Matrix RANSAC inliers count
+            'num_inliers_pose': num_inliers_pose,    # recoverPose cheirality/depth inliers count
+            'num_inliers_H': num_inliers_H,
             'inlier_ratio': f"{inlier_ratio:.4f}",
+            'feature_survival_rate': f"{survival_rate:.4f}",
+            'feature_vel_mean': f"{vel_mean:.4f}",
+            'feature_vel_max': f"{vel_max:.4f}",
+            'mean_lk_err': f"{mean_lk_err:.4f}",
+            'consecutive_low_inliers': self.consecutive_low_inliers,
+            'failure_triggered_streak': self.failure_triggered_streak,
+            'window_low_inlier_pct': f"{window_low_inlier_pct:.2f}",
+            'failure_triggered_window': self.failure_triggered_window,
             'rel_tx': rel_tx,
             'rel_ty': rel_ty,
             'rel_tz': rel_tz,
@@ -183,9 +253,10 @@ class MinimalVO(Node):
         self.path_pub.publish(self.path_msg)
 
         if self.frame_idx % 25 == 0 or self.frame_idx == 0:
+            self.save_csv_and_report()
             self.get_logger().info(
                 f"[{self.frame_idx}] Pos: ({self.curr_pos[0,0]:.2f}, {self.curr_pos[1,0]:.2f}, {self.curr_pos[2,0]:.2f}) | "
-                f"Detected: {num_detected}, Matched: {num_matched}, Inliers: {num_inliers} ({inlier_ratio*100:.1f}%)"
+                f"Matched: {num_matched}, InliersE: {num_inliers_E}, InliersPose: {num_inliers_pose}, InliersH: {num_inliers_H} | LKErr: {mean_lk_err:.2f}px"
             )
 
         self.frame_idx += 1
@@ -196,8 +267,15 @@ class MinimalVO(Node):
     def _process_klt(self, cv_img):
         num_detected = 0
         num_matched = 0
+        num_inliers_E = 0
+        num_inliers_pose = 0
         num_inliers = 0
         inlier_ratio = 0.0
+        survival_rate = 0.0
+        vel_mean = 0.0
+        vel_max = 0.0
+        mean_lk_err = 0.0
+        num_inliers_H = 0
         rel_tx, rel_ty, rel_tz = 0.0, 0.0, 0.0
         rel_rot_deg = 0.0
 
@@ -207,7 +285,7 @@ class MinimalVO(Node):
             self.prev_pts = pts
             self.prev_img = cv_img
             num_detected = len(pts) if pts is not None else 0
-            return num_detected, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0
+            return num_detected, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0
 
         num_detected = len(self.prev_pts)
 
@@ -218,12 +296,31 @@ class MinimalVO(Node):
             criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 30, 0.01)
         )
 
-
         if curr_pts is not None and status is not None:
             valid_mask = (status == 1).reshape(-1)
             pts1 = self.prev_pts[valid_mask]
             pts2 = curr_pts[valid_mask]
             num_matched = len(pts2)
+
+            survival_rate = float(num_matched / num_detected) if num_detected > 0 else 0.0
+
+            if num_matched > 0:
+                displacements = np.linalg.norm(pts2[:, 0, :] - pts1[:, 0, :], axis=1)
+                vel_mean = float(np.mean(displacements))
+                vel_max = float(np.max(displacements))
+
+                if err is not None:
+                    valid_err = err[valid_mask]
+                    if len(valid_err) > 0:
+                        mean_lk_err = float(np.mean(valid_err))
+
+                if num_matched >= 4:
+                    try:
+                        H, mask_H = cv2.findHomography(pts1, pts2, cv2.RANSAC, 3.0)
+                        if H is not None and mask_H is not None:
+                            num_inliers_H = int(np.sum(mask_H == 1))
+                    except Exception:
+                        num_inliers_H = 0
 
             if num_matched >= 8:
                 # Estimate Essential Matrix with 5-point RANSAC algorithm
@@ -234,15 +331,31 @@ class MinimalVO(Node):
                     threshold=1.0
                 )
 
-                if E is not None and E.shape == (3, 3):
-                    inliers_count, R_opt, t_opt, mask_pose = cv2.recoverPose(E, pts1, pts2, self.K, mask=mask_E)
-                    num_inliers = int(inliers_count)
-                    inlier_ratio = float(num_inliers / num_matched) if num_matched > 0 else 0.0
+                if mask_E is not None:
+                    num_inliers_E = int(np.sum(mask_E == 1))
+                else:
+                    num_inliers_E = 0
 
-                    if num_inliers >= 8:
-                        # Frame Transform: CV Optical -> Gazebo ENU World
+                num_inliers = num_inliers_E  # Backward compatibility: num_inliers == num_inliers_E
+                inlier_ratio = float(num_inliers_E / num_matched) if num_matched > 0 else 0.0
+
+                if E is not None and E.shape == (3, 3):
+                    res_pose = cv2.recoverPose(
+                        E,
+                        pts1,
+                        pts2,
+                        self.K,
+                        distanceThresh=1000.0,
+                        mask=mask_E
+                    )
+                    inliers_count, R_opt, t_opt, mask_pose = res_pose[0], res_pose[1], res_pose[2], res_pose[3]
+                    num_inliers_pose = int(inliers_count)
+
+                    # Pose update condition strictly uses recoverPose inliers count as originally specified
+                    if num_inliers_pose >= 8:
+                        # Frame Transform: CV Optical -> Gazebo ENU World (negating t_opt to get camera motion vector)
                         R_gaz = self.R_opt2gaz @ R_opt @ self.R_opt2gaz.T
-                        t_gaz = self.R_opt2gaz @ t_opt
+                        t_gaz = - (self.R_opt2gaz @ t_opt)
 
                         rel_tx = float(t_gaz[0, 0])
                         rel_ty = float(t_gaz[1, 0])
@@ -266,15 +379,19 @@ class MinimalVO(Node):
                 self.prev_pts = None
 
         self.prev_img = cv_img
-        return num_detected, num_matched, num_inliers, inlier_ratio, rel_tx, rel_ty, rel_tz, rel_rot_deg
+        return num_detected, num_matched, num_inliers, num_inliers_E, num_inliers_pose, inlier_ratio, survival_rate, vel_mean, vel_max, mean_lk_err, num_inliers_H, rel_tx, rel_ty, rel_tz, rel_rot_deg
 
     def _process_orb(self, cv_img):
         kp, des = self.orb.detectAndCompute(cv_img, None)
         num_detected = len(kp) if kp is not None else 0
 
         num_matched = 0
+        num_inliers_E = 0
+        num_inliers_pose = 0
         num_inliers = 0
         inlier_ratio = 0.0
+        mean_lk_err = 0.0
+        num_inliers_H = 0
         rel_tx, rel_ty, rel_tz = 0.0, 0.0, 0.0
         rel_rot_deg = 0.0
 
@@ -289,19 +406,37 @@ class MinimalVO(Node):
 
             num_matched = len(good_matches)
 
+            if num_matched >= 4:
+                pts1 = np.float32([self.prev_kp[m.queryIdx].pt for m in good_matches])
+                pts2 = np.float32([kp[m.trainIdx].pt for m in good_matches])
+
+                try:
+                    H, mask_H = cv2.findHomography(pts1, pts2, cv2.RANSAC, 3.0)
+                    if H is not None and mask_H is not None:
+                        num_inliers_H = int(np.sum(mask_H == 1))
+                except Exception:
+                    num_inliers_H = 0
+
             if num_matched >= 8:
                 pts1 = np.float32([self.prev_kp[m.queryIdx].pt for m in good_matches])
                 pts2 = np.float32([kp[m.trainIdx].pt for m in good_matches])
 
                 E, mask_E = cv2.findEssentialMat(pts1, pts2, self.K, method=cv2.RANSAC, prob=0.999, threshold=1.0)
+                if mask_E is not None:
+                    num_inliers_E = int(np.sum(mask_E == 1))
+                else:
+                    num_inliers_E = 0
+
+                num_inliers = num_inliers_E  # Backward compatibility: num_inliers == num_inliers_E
+                inlier_ratio = float(num_inliers_E / num_matched) if num_matched > 0 else 0.0
+
                 if E is not None and E.shape == (3, 3):
                     inliers_count, R_opt, t_opt, mask_pose = cv2.recoverPose(E, pts1, pts2, self.K, mask=mask_E)
-                    num_inliers = int(inliers_count)
-                    inlier_ratio = float(num_inliers / num_matched) if num_matched > 0 else 0.0
+                    num_inliers_pose = int(inliers_count)
 
-                    if num_inliers >= 8:
+                    if num_inliers_pose >= 8:
                         R_gaz = self.R_opt2gaz @ R_opt @ self.R_opt2gaz.T
-                        t_gaz = self.R_opt2gaz @ t_opt
+                        t_gaz = - (self.R_opt2gaz @ t_opt)
 
                         rel_tx = float(t_gaz[0, 0])
                         rel_ty = float(t_gaz[1, 0])
@@ -317,7 +452,7 @@ class MinimalVO(Node):
         self.prev_kp = kp
         self.prev_des = des
 
-        return num_detected, num_matched, num_inliers, inlier_ratio, rel_tx, rel_ty, rel_tz, rel_rot_deg
+        return num_detected, num_matched, num_inliers, num_inliers_E, num_inliers_pose, inlier_ratio, mean_lk_err, num_inliers_H, rel_tx, rel_ty, rel_tz, rel_rot_deg
 
     def _convert_numpy(self, msg: Image) -> np.ndarray:
         if msg.encoding in ['rgb8', 'bgr8']:
@@ -335,7 +470,10 @@ class MinimalVO(Node):
         fieldnames = [
             'frame_idx', 'timestamp_sec', 'timestamp_nanosec', 'timestamp_total_sec',
             'pos_x', 'pos_y', 'pos_z', 'rot_x', 'rot_y', 'rot_z', 'rot_w',
-            'num_detected', 'num_matched', 'num_inliers', 'inlier_ratio',
+            'num_detected', 'num_matched', 'num_inliers', 'num_inliers_E', 'num_inliers_pose', 'num_inliers_H', 'inlier_ratio',
+            'feature_survival_rate', 'feature_vel_mean', 'feature_vel_max', 'mean_lk_err',
+            'consecutive_low_inliers', 'failure_triggered_streak',
+            'window_low_inlier_pct', 'failure_triggered_window',
             'rel_tx', 'rel_ty', 'rel_tz', 'rel_rot_deg'
         ]
         with open(self.csv_path, 'w', newline='') as f:
@@ -346,21 +484,37 @@ class MinimalVO(Node):
         det_list = [r['num_detected'] for r in self.records]
         match_list = [r['num_matched'] for r in self.records]
         inlier_list = [r['num_inliers'] for r in self.records]
+        inlier_e_list = [r.get('num_inliers_E', r['num_inliers']) for r in self.records]
+        inlier_pose_list = [r.get('num_inliers_pose', 0) for r in self.records]
+        inlier_h_list = [r['num_inliers_H'] for r in self.records]
         ratio_list = [float(r['inlier_ratio']) for r in self.records]
+        surv_list = [float(r['feature_survival_rate']) for r in self.records]
+        vel_list = [float(r['feature_vel_mean']) for r in self.records]
+        lk_err_list = [float(r['mean_lk_err']) for r in self.records]
+
+        ts_list = [float(r['timestamp_total_sec']) for r in self.records]
+        duration_sec = ts_list[-1] - ts_list[0] if len(ts_list) > 1 else 0.0
+        achieved_fps = float(len(self.records) / duration_sec) if duration_sec > 0 else 0.0
 
         print("\n" + "=" * 70)
-        print("PHASE 0C — MINIMAL MONOCULAR VO EXECUTION REPORT")
+        print("PHASE 0E — MONOCULAR VO EXECUTION REPORT")
         print("=" * 70)
         print(f"Tracking Pipeline      : {self.mode.upper()}")
-        print(f"Total Processed Frames : {len(self.records)}")
+        print(f"Total Processed Frames : {len(self.records)} (Achieved FPS: {achieved_fps:.2f} Hz over {duration_sec:.2f}s)")
         print(f"Output CSV Path        : {os.path.abspath(self.csv_path)}")
-        print(f"Final Integrated Pos   : ({self.curr_pos[0,0]:.4f}, {self.curr_pos[1,0]:.4f}, {self.curr_pos[2,0]:.4f}) [Unit Scale]")
+        print(f"Streak Failure (Old)   : {self.failure_triggered_streak} (First at Frame #{self.failure_first_frame_streak})")
+        print(f"Window Failure (New)   : {self.failure_triggered_window} (First at Frame #{self.failure_first_frame_window})")
         print("-" * 70)
         print("INTERMEDIATE METRICS SUMMARY:")
         print(f"  Detected Features/Frame : Mean = {np.mean(det_list):.1f}, Min = {np.min(det_list)}, Max = {np.max(det_list)}")
         print(f"  Matched Features/Frame  : Mean = {np.mean(match_list):.1f}, Min = {np.min(match_list)}, Max = {np.max(match_list)}")
-        print(f"  RANSAC Inliers/Frame    : Mean = {np.mean(inlier_list):.1f}, Min = {np.min(inlier_list)}, Max = {np.max(inlier_list)}")
+        print(f"  Essential Inliers (E)   : Mean = {np.mean(inlier_e_list):.1f}, Min = {np.min(inlier_e_list)}, Max = {np.max(inlier_e_list)}")
+        print(f"  Pose Inliers (recover)  : Mean = {np.mean(inlier_pose_list):.1f}, Min = {np.min(inlier_pose_list)}, Max = {np.max(inlier_pose_list)}")
+        print(f"  Homography Inliers/Frame: Mean = {np.mean(inlier_h_list):.1f}, Min = {np.min(inlier_h_list)}, Max = {np.max(inlier_h_list)}")
         print(f"  Inlier Ratio            : Mean = {np.mean(ratio_list)*100:.2f}%, Min = {np.min(ratio_list)*100:.2f}%, Max = {np.max(ratio_list)*100:.2f}%")
+        print(f"  Feature Survival Rate   : Mean = {np.mean(surv_list)*100:.2f}%, Min = {np.min(surv_list)*100:.2f}%, Max = {np.max(surv_list)*100:.2f}%")
+        print(f"  Feature Velocity (Mean) : Mean = {np.mean(vel_list):.2f} px/fr, Max = {np.max(vel_list):.2f} px/fr")
+        print(f"  LK Tracking Error (Mean): Mean = {np.mean(lk_err_list):.4f} px, Max = {np.max(lk_err_list):.4f} px")
         print("=" * 70 + "\n")
 
 
@@ -398,6 +552,18 @@ def main():
 
     rclpy.init()
     node = MinimalVO(args.camera_topic, args.output_dir, args.max_frames, mode=args.mode, output_filename=args.output_filename)
+
+    def sig_handler(sig, frame):
+        print("\n[INFO] Signal received in MinimalVO. Saving CSV before exiting...")
+        node.save_csv_and_report()
+        if rclpy.ok():
+            rclpy.shutdown()
+        sys.exit(0)
+
+    import signal
+    signal.signal(signal.SIGINT, sig_handler)
+    signal.signal(signal.SIGTERM, sig_handler)
+
     try:
         rclpy.spin(node)
     except SystemExit:
@@ -405,6 +571,7 @@ def main():
     except KeyboardInterrupt:
         node.get_logger().info("VO interrupted by user.")
     finally:
+        node.save_csv_and_report()
         if rclpy.ok():
             rclpy.shutdown()
 

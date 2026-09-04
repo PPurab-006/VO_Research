@@ -6,6 +6,30 @@
 
 ---
 
+## Master Log Summary Index
+
+| Entry # | Date | Topic / Focus | Original Finding | Final Reinterpreted Status / Verdict |
+| :---: | :---: | :--- | :--- | :--- |
+| **1** | 2026-08-20 | Environment Scaffolding | Base infrastructure setup | **PASS** — Environment frozen |
+| **2** | 2026-08-22 | Phase 0A Camera Sensor | 30.4 Hz, zero-distortion pinhole | **PASS** — Intrinsics verified |
+| **3** | 2026-08-22 | Phase 0A Ground Truth Pose | 50 Hz World ENU pose | **PASS** — ENU coordinates verified |
+| **4** | 2026-08-22 | Phase 0B Synchronization | SimTime NN matching ($\le 20\text{ms}$) | **PASS** — 99.02% matched within 20ms |
+| **5** | 2026-08-22 | Phase 0C Minimal Monocular VO | GFTT + KLT + 5-pt Essential RANSAC | **PASS** — Poses recovered at unit scale |
+| **6** | 2026-08-31 | World Texture Upgrade | Low inliers on featureless world | **RESOLVED** — Added textured materials |
+| **7** | 2026-08-31 | Phase 0D Trajectory Alignment | Sim(3) Umeyama alignment | **PASS** — Scale $s=0.0745$, ATE $0.676\text{m}$ |
+| **8** | 2026-09-01 | Z-Axis Sawtooth Artifact | Teleportation without thrust | **RESOLVED** — Switched to PX4 offboard |
+| **9** | 2026-09-01 | OFFBOARD Handshake | Altitude plateau at 1.0m | **RESOLVED** — Pre-stream setpoints + mode cmd |
+| **10** | 2026-09-01 | Planar RANSAC & Distance Sweet-spot | Non-monotonic inlier ratio vs range | **DOCUMENTED** — 3–5m sweet spot in textured.sdf |
+| **11** | 2026-09-02 | `recoverPose` Translation Sign | Negative Pearson correlation | **RESOLVED** — Negated step translation |
+| **12** | 2026-09-02 | Physics Engine Collision Test | Visual proximity pass-through | **PASS** — Wall collision physics active |
+| **13** | 2026-09-02 | `boxworld_obstacles_tight` Migration | Rendering black in OGRE2 | **RESOLVED** — Material scripts upgraded to PBR |
+| **14** | 2026-09-03 | CPU Rendering Jitter | Software rendering frame drops | **RESOLVED** — Enabled NVIDIA GPU offload |
+| **15** | 2026-09-03 | Inlier Ratio vs Count Distinction | Apparent low inliers in bounded arena | **SUPERSEDED** — Metric conflation (`dt=50` rejection) |
+| **16** | 2026-09-03 | Sweep A: Pure Yaw Escalation | Yaw rate vs frame drop & inliers | **SUPERSEDED** — E-RANSAC healthy; $t=0$ depth filter artifact |
+| **17** | 2026-09-04 | Forensic Pipeline Repair & Phase 0E Finalization | Conflated metrics & `dt=50` rejection | **PASS / REPAIRED** — `num_inliers_E` decoupled; `dt=1000` adopted; validated in real 10° flight; Phase 0E complete |
+
+---
+
 ## Log Entries
 
 ### Entry 1: 2026-08-20 — Workspace & Environment Scaffolding
@@ -169,8 +193,143 @@
   - The reusable evaluation pipeline (`src/evaluate_trajectory.py`) provides automated ATE and RPE calculation and plot generation for all future experiments from Phase 1 onward.
   - All Phase 0 exit criteria (0A–0D) are now fully satisfied.
 
+### Entry 8: 2026-09-01 — Bug 3: Z-Axis Sawtooth from Teleportation & Gravity
+- **Date**: 2026-09-01
+- **Problem / Goal**: Resolve Z-axis sawtooth pattern in ground-truth trajectory logs during Phase 0 trajectory generation.
+- **Hypothesis**: `animate_drone.py` used Gazebo `set_pose` teleportation on an un-armed drone model. Between teleportation service calls, Gazebo physics and gravity caused freefall acceleration, producing severe sawtooth altitude drops in ground truth.
+- **What I Changed**: Switched trajectory generation from script-based model teleportation to real PX4 offboard flight with armed motors via `fly_trajectory.py`.
+- **Result**: Ground-truth Z-axis smoothness restored without sawtooth drops (max step change $\Delta z = 0.011\text{ m}$, std dev $0.0028\text{ m}$).
+- **What I Learned**: Teleporting Gazebo models without active flight controller thrust causes freefall physics artifacts between frames; all VO evaluation flights must use real PX4 offboard flight commands.
 
+### Entry 9: 2026-09-01 — Bug 4: OFFBOARD Mode Handshake & MAVLink `type_mask` Fix
+- **Date**: 2026-09-01
+- **Problem / Goal**: Fix offboard trajectory flight plateauing at $\sim 1.0\text{ m}$ altitude instead of climbing to the commanded $\sim 2.0\text{ m}$ cruise altitude.
+- **Hypothesis**: The flight controller failed to transition into OFFBOARD mode because `fly_trajectory.py` sent `MAV_CMD_NAV_TAKEOFF` but never issued `MAV_CMD_DO_SET_MODE` to request OFFBOARD mode. PX4 remained in `AUTO.TAKEOFF` $\rightarrow$ `AUTO.LOITER` and ignored external velocity/position setpoints.
+- **What I Changed**: Updated `fly_trajectory.py` to pre-stream setpoints for $\sim 1.5\text{ s}$ before requesting mode transition, explicitly sent MAVLink command `MAV_CMD_DO_SET_MODE` (`param2=6` for OFFBOARD), and corrected position/velocity `type_mask` bitmask to `1507` (`0x05E3`).
+- **Result**: Drone successfully climbed to and sustained commanded cruise altitude ($1.91\text{ m} \text{--} 1.98\text{ m}$). OFFBOARD mode confirmed via MAVLink heartbeat telemetry (`custom_mode=393216`, `main_mode=6`).
+- **What I Learned**: PX4 requires continuous streaming of setpoints prior to accepting OFFBOARD mode transition requests; proper MAVLink `type_mask` bitmask definitions are mandatory for position/velocity control.
 
+### Entry 10: 2026-09-01 — Bug 5: Planar RANSAC Degeneracy & Proximity Sweet-Spot Finding
+- **Date**: 2026-09-01
+- **Problem / Goal**: Resolve low mean inlier ratio ($6.94\%$, $\sim 80\%$ near-zero frames) during straight-line flight over a flat tiled floor.
+- **Hypothesis**: 5-point Essential Matrix RANSAC is ill-conditioned when all tracked keypoints lie on a planar surface (flat ground plane), causing planar RANSAC degeneracy during straight flight.
+- **What I Changed**: Replaced straight-line flight over flat ground with a circular trajectory surrounding a 3D object cluster (`textured.sdf`). Conducted a systematic radial distance sweep from the cluster centroid.
+- **Result**: SUBSTANTIVE RESEARCH FINDING — Discovered a non-monotonic distance sweet-spot in `textured.sdf`: a radial distance of $3.0\text{ m} \text{--} 5.0\text{ m}$ from the cluster centroid yields a **57.10% mean inlier ratio**; $<3.0\text{ m}$ drops to **18.87%** (due to motion blur and FOV clipping); $5.0\text{ m} \text{--} 7.0\text{ m}$ drops to **18.41%** (due to feature pixel sparsity). Closer proximity is not strictly better. Note: This finding was specific to `textured.sdf` and did not transfer to `boxworld_obstacles_tight` (see Entry 13).
+- **What I Learned**: Monocular VO feature tracking in textured environments exhibits a non-monotonic distance sweet-spot; proximity to object clusters is non-linearly bounded by FOV/motion blur at close range and feature resolution at far range.
 
+### Entry 11: 2026-09-02 — Bug 6: `cv2.recoverPose` Translation Sign Convention Fix
+- **Date**: 2026-09-02
+- **Problem / Goal**: Fix negative / wrong-sign Pearson correlation between estimated VO trajectory and ground truth ($r_x = -0.46$, $r_z = -0.05$).
+- **Hypothesis**: OpenCV `cv2.recoverPose` returns relative translation vector $t$ satisfying $p_1 = R p_2 + t$, which represents the transformation from camera 2 to camera 1 frame—the exact opposite of camera motion direction. The code accumulated $t$ without negation.
+- **What I Changed**: Negated translation vector during optical-to-Gazebo frame transformation: $t_{\text{gaz}} = -(R_{\text{opt2gaz}} t_{\text{opt}})$.
+- **Result**: Verified without re-running flight data: Pearson correlation immediately flipped to strong positive alignment ($r_x = +0.97$, $r_y = +0.71$, $r_z = +0.69$).
+- **What I Learned**: OpenCV `cv2.recoverPose` translation output is defined in point transformation coordinates; converting to camera ego-motion vectors requires explicit negation when accumulating trajectory step vectors.
 
+### Entry 12: 2026-09-02 — Collision Test: Simulator Physics Engine Verification
+- **Date**: 2026-09-02
+- **Problem / Goal**: Resolve discrepancy between a visually observed near-collision during circular flight near `textured_cylinder` (GT showed smooth trajectory, max step $0.033\text{ m}$, $1.10\text{ m}$ minimum clearance) and verify if Gazebo physics collision geometry is active.
+- **Hypothesis**: Verify whether Gazebo physics collision engine is active or if models permit uncaptured pass-through artifacts.
+- **What I Changed**: Created a dedicated collision test world `collision_test_world.sdf` with a large wall obstacle ($10\text{m} \times 5\text{m} \times 0.5\text{m}$ at $X=10.0\text{m}$, front face at $X=9.75\text{m}$) and executed head-on flight at $1.2\text{ m/s}$.
+- **Result**: COLLISION REGISTERED — Drone struck wall face at $X=9.565\text{m}$, experienced violent velocity reversal ($1.2\text{ m/s} \rightarrow 5.2\text{ m/s}$ recoil), bounced back to $X=5.29\text{m}$, with zero wall penetration. Confirmed Gazebo collision physics system is fully active; earlier cylinder flight was a genuine non-contact pass.
+- **What I Learned**: Gazebo rigid-body collision handling is functional; visual proximity without trajectory disruption in simulation reflects valid spatial clearance.
+
+### Entry 13: 2026-09-02 — World Migration to `boxworld_obstacles_tight`, Rendering Fix, & Feature Density Analysis
+- **Date**: 2026-09-02
+- **Problem / Goal**: Migrate from hand-built `textured.sdf` to standardized benchmark world `engcang/gazebo_maps` `boxworld_obstacles_tight` ($20\text{m} \times 20\text{m}$ arena, 4 bounding walls, 200 obstacle spheres, ROLAND ICCAS 2021) to eliminate scene-construction confounds. Fix rendering failure in GZ Sim PBR pipeline and analyze feature density.
+- **Hypothesis**: `boxworld_obstacles_tight` rendered unlit/black in GZ Sim OGRE2 PBR pipeline (mean pixel brightness 0.0) due to legacy Gazebo 11 OGRE1 material scripts (`grass_plane`, `bbox_wall`, `obstacle_r`).
+- **What I Changed**:
+  - Updated material scripts by adding explicit `pbr`, `albedo_map`, `ambient`, `diffuse`, and `specular` tags for all materials, and corrected `sun_2` light intensity. Verified visually via screenshot (mean pixel brightness increased from 0.0 to 37.84).
+  - Evaluated feature density contribution of 200 obstacle spheres ($r=0.025\text{m}$).
+- **Result**:
+  - Benchmark world successfully migrated and rendered with full PBR illumination.
+  - FEATURE DENSITY FINDING: The 200 obstacle spheres ($r=0.025\text{m}$) project to small $\sim 3 \times 3\text{ px}$ targets with weak corner gradients, contributing $<15\%$ of total keypoints. However, arena ground and wall textures alone saturate GFTT/ORB feature detectors to 2000/2000 keypoints uniformly across the arena.
+  - Bug 5's proximity-based sweet-spot finding from `textured.sdf` does NOT transfer to `boxworld_obstacles_tight`; trajectory design in this world should optimize for wall clearance and flight dynamics rather than obstacle proximity.
+- **What I Learned**: Benchmark world migration requires PBR material translation for Gazebo Sim OGRE2 engine; feature distribution in bounded textured arenas is dominated by ground/wall surfaces rather than small scattered obstacles.
+
+### Entry 14: 2026-09-03 — CPU Rendering Frame-Rate Jitter & GPU Offload Fix
+- **Date**: 2026-09-03
+- **Problem / Goal**: Resolve severe VO tracking collapse in v3 circular flight (`boxworld_obstacles_tight`), which produced a mean inlier ratio of 0.51% (vs 41.96% in v1) and collapsed Pearson correlation ($r_y = +0.0993$, $r_z = +0.1310$).
+- **Hypothesis**: Evaluated and REJECTED texture aliasing and specular instability hypotheses (ORB inliers $>90\%$, KLT inliers $98.93\%$ at true 30 FPS, brightness variation $<3.55/255$). True root cause: CPU-starved software rendering (Mesa/llvmpipe on integrated Iris Xe) caused severe ROS 2 camera frame-rate jitter (inter-frame deltas up to 1.52s vs 32ms target), pushing inter-frame pixel displacement (up to 53.6 px) beyond KLT's 20 px search window.
+- **What I Changed**:
+  - Enabled NVIDIA PRIME render offload (`__NV_PRIME_RENDER_OFFLOAD=1`, `__GLX_VENDOR_LIBRARY_NAME=nvidia`, `GZ_SIM_RENDER_ENGINE=ogre2`) for Gazebo Sim on NVIDIA RTX 3050.
+  - Updated `src/launch_camera_sim.sh` process cleanup handler: added missing `gz-sim-main` and `gz-sim-gui-client` process names with a 2-stage SIGTERM $\rightarrow$ SIGKILL fallback to eliminate orphaned process accumulation.
+- **Result**: GPU utilization verified at 34–38% (up from 0%), frame timing restored to $\sim 36\text{ ms}$ mean delta. IDE lag resolved via clean process termination. CAVEAT: v1/v2 baselines were recorded under CPU rendering and may retain minor unquantified jitter degradation.
+- **What I Learned**: Monocular VO optical flow is highly sensitive to camera frame-rate jitter; software rendering frame drops cause inter-frame motion to exceed the KLT tracking search window. GPU rendering hardware acceleration and clean process lifecycle management are essential for reproducible VO benchmarks.
+
+### Entry 15: 2026-09-03 — Inlier Ratio vs Inlier Count Distinction in Bounded Obstacle Arenas
+- **Date**: 2026-09-03
+- **Problem / Goal**: Resolve apparent contradiction in v3-rerun post-GPU-fix: Pearson correlation recovered strongly ($r_y: 0.0993 \rightarrow 0.9073$), but mean inlier ratio remained low (0.11% raw, 0.12% corrected excluding re-detection resets).
+- **Hypothesis**: Investigated whether low mean inlier ratio was an artifact of `minimal_vo.py` feature re-detection resets (which reset tracked points to 0 when $<100$). HYPOTHESIS REJECTED: excluding 24 re-detection reset frames (6.17%) shifted the mean only from 0.11% to 0.12%.
+- **What I Changed**: Modified `src/analyze_v3_flight_metrics.py` to implement Approach A (excluding `num_matched == 0` reset frames) and conducted deep breakdown of matched vs inlier feature counts across all 4 flights.
+- **Result**:
+  - True explanation: KLT tracks $\sim 1870$ features per frame across the entire image (large denominator), but 5-point Essential Matrix RANSAC accepts only 1–42 points (mean 3.67 inliers) due to high 3D parallax and depth variation in `boxworld_obstacles_tight`.
+  - Dividing mean 3.67 inliers by $\sim 1870$ matches yields $\sim 0.197\%$ on non-zero frames.
+  - Crucially, Essential Matrix `recoverPose` requires only 5–8 inliers to solve for relative camera rotation and unit translation direction. The small absolute inlier count was sufficient for accurate pose recovery ($r_y = +0.9073$).
+  - **[SUPERSEDED / LEGACY OBSERVATION]**: Note: The logged inlier count (3.67 inliers) was recorded using the legacy `cv2.recoverPose()` count under default `distanceThresh=50.0`. Forensic investigation (Entry 17) proved `findEssentialMat()` actually found $>500$ valid RANSAC inliers (`num_inliers_E`), and the low pose count was caused by small-baseline unit-scale depth truncation ($Z_{\text{unit}} = 166.7\text{m} > 50.0\text{m}$).
+
+### Entry 16: 2026-09-03 — Phase 0E Sweep A: Pure Yaw-Rate Escalation & Precursor Signal Characterization
+- **Date**: 2026-09-03
+- **Problem / Goal**: Execute Phase 0E Sweep A to characterize how monocular VO degrades under increasingly aggressive rotational motion, isolated from translation, in `boxworld_obstacles_tight`, and identify observable precursor signals (feature-track survival rate, image-space feature velocity) prior to tracking failure.
+- **Design**: In-place hover at $(5.0, 5.0, 2.5\text{m})$, pure yaw rotation across 6 levels ($10, 20, 40, 80, 120, 180\text{ deg/s}$). No translation, isolating rotation as a single independent variable.
+- **v1 Confounds Identified & Resolved**:
+  1. `minimal_vo.py` `--max-frames=500` cap truncated data non-uniformly across levels when combined with camera FPS dropping at high yaw rates, producing inconsistent active-frame counts (257 frames at 10 deg/s vs 94 at 180 deg/s) that cut off data collection early relative to the full $\sim 20.5\text{s}$ hover.
+  2. Consecutive-streak failure definition (`num_inliers < 5` for 10+ consecutive frames) was fragile: a single lucky high-inlier frame (e.g. matching a distant, low-parallax wall) reset the streak counter, causing 180 deg/s to falsely register "no failure" despite 67% frame-level tracking failure (28.7% re-detection resets + 38.3% zero-inlier frames).
+  - **Fixes Applied**: Raised `--max-frames` to 2000 (eliminating truncation artifacts) and replaced the failure definition with a 2.0s sliding window (failure = $>70\%$ of frames in any 2.0s window have `num_inliers < 5`).
+- **v2 Results (Clean, Monotonic, Trustworthy)**:
+  - Feature-track survival rate ($S_f$): 91.74% (10 deg/s) $\rightarrow$ 66.07% (180 deg/s), demonstrating progressive degradation.
+  - Mean image-space feature velocity ($\bar{v}_{px}$) crosses the $\sim 10.5\text{ px}$ Pyramidal KLT search-window bound between 20–40 deg/s ($7.85\text{ px} \rightarrow 14.56\text{ px/frame}$).
+  - All 6 levels correctly triggered failure under the 2.0s sliding-window definition (resolving the false-pass anomaly at 180 deg/s).
+- **Open Limitation (Documented & Audit Verified)**:
+  - Achieved camera FPS still drops with yaw rate even after the truncation fix ($30.34\text{ Hz}$ at 10–80 deg/s $\rightarrow 26.66\text{ Hz}$ at 120 deg/s $\rightarrow 19.15\text{ Hz}$ at 180 deg/s).
+  - Investigated motion blur as a possible cause (Purab's hypothesis): audit of camera sensor SDF confirmed NO `motion_blur`, `shutter_speed`, `exposure`, or TAA tags exist in this GZ Sim camera pipeline; ruled out with direct config inspection.
+  - True cause: GPU rendering throughput bottleneck — Ogre2 frustum culling and PBR texture rebinding cost scales with how much visible scene content changes per frame, which increases with rotation speed; compounded by physics-render thread sync forcing dropped frames under real-time PX4 SITL execution.
+  - Net effect: Yaw rate and camera FPS remain partially entangled variables in this dataset — degradation magnitude at 120–180 deg/s is likely somewhat overstated relative to a true FPS-locked test, though the underlying trend and mechanism (faster rotation $\rightarrow$ more image-space motion $\rightarrow$ worse tracking) are real and directionally sound. Accepted as a documented limitation rather than pursued further, given project deadline.
+- **Data References**:
+  - Datasets: `results/yaw_sweep_v2_{10,20,40,80,120,180}dps_{gt,vo}.csv`
+  - Plot: `plots/yaw_sweep_v2_characterization.png`
+- **What I Learned**: Experimental protocol confounds (frame caps and fragile streak counters) must be rigorously validated before interpreting failure thresholds; GPU rendering load during rapid sensor rotation can introduce camera frame rate drops in physics simulators, which should be explicitly audited and logged.
+- **[SUPERSEDED / REINTERPRETED BY REPAIRED PIPELINE]**: The failure triggers recorded in v2 were evaluated against `num_inliers` (the conflated `recoverPose` count under `distanceThresh=50.0`). As established in Entry 17, `findEssentialMat()` remained 100% healthy across all yaw rates ($819.1 - 1037.0$ mean inliers, `strict_E_fail = FALSE`). Pure yaw produces near-zero physical translation baseline ($t_{\text{true}} \approx 0$), inflating unit-scale triangulated point depth ($Z_{\text{unit}} = Z_{\text{true}} / \|t\| \to \infty$) beyond depth filters. Therefore, low pose counts under pure yaw are unit-scale zero-baseline depth filtering artifacts, NOT Essential Matrix RANSAC or epipolar correspondence failures.
+
+### Entry 17: 2026-09-04 — Phase 0E Forensic Pipeline Repair, Metric Separation & Finalization Synthesis
+- **Date**: 2026-09-04
+- **Problem / Goal**: Conduct a comprehensive forensic audit of the Essential Matrix and pose estimation pipeline (`src/minimal_vo.py`), resolve metric conflation between epipolar RANSAC inliers and pose depth-filter inliers, fix small-baseline point rejection in OpenCV `recoverPose()`, validate the repair on physical flight telemetry in `agriculture.world`, re-evaluate Phase 0E Sweep A and Sweep B under the corrected pipeline, and establish forward experimental world policies for Phase 1+.
+- **Forensic Discovery & Mechanism**:
+  1. **Conflated Metric Discovery**: Historically, `minimal_vo.py` logged `num_inliers = int(inliers_count)` directly from `cv2.recoverPose()`. The logged `num_inliers` was **NOT equivalent** to `cv2.findEssentialMat()` RANSAC inliers.
+  2. **OpenCV `recoverPose()` Depth Filtering Rejection**: OpenCV's `cv2.recoverPose(E, pts1, pts2, K, mask=mask_E)` dispatches to an internal C++ overload that enforces an implicit default parameter **`distanceThresh = 50.0` meters**.
+  3. **Unit-Scale Triangulated Depth Inflation**: Monocular VO normalizes estimated translation to unit norm ($\|\hat{t}\| = 1.0\text{ m}$). For a camera hovering at physical altitude $Z_{\text{true}}$ with per-frame physical translation baseline $t_{\text{true}}$, the unit-scale triangulated depth is:
+     $$Z_{\text{unit}} = Z_{\text{true}} \cdot \frac{\|\hat{t}\|}{\|t_{\text{true}}\|} = \frac{Z_{\text{true}}}{\|t_{\text{true}}\|}$$
+     During small-baseline maneuvers ($Z_{\text{true}} \approx 2.50\text{ m}, t_{\text{true}} \approx 0.015\text{ m}$), $Z_{\text{unit}} = 2.50 / 0.015 = 166.7\text{ meters}$. Because $166.7 > 50.0$, `recoverPose()` rejected **100%** of valid triangulated points as exceeding `distanceThresh`, returning `num_inliers_pose = 0` despite `findEssentialMat()` finding $>500$ valid epipolar RANSAC inliers.
+- **Pipeline Instrumentations & Repairs**:
+  1. **Metric Separation**: `src/minimal_vo.py` was instrumented to separate and log:
+     - `num_inliers_E`: `findEssentialMat()` 5-point RANSAC inlier count (algebraic epipolar correspondence quality).
+     - `num_inliers_pose`: `recoverPose()` accepted pose inlier count (cheirality $Z > 0$ and depth bounds).
+     - `num_inliers`: set equal to `num_inliers_E` for backward-compatible telemetry logging.
+  2. **Operating Envelope Parameter Adoption**: `cv2.recoverPose()` was updated to explicitly pass `distanceThresh=1000.0`. A 42-case synthetic parameter matrix ($N=500$ points) verified that `distanceThresh=1000.0` accommodates unit-scale depths for hover altitudes up to $10.0\text{ m}$ and baselines down to $1.0\text{ cm}$ ($Z/t = 1000.0$), restoring 500/500 point acceptance.
+- **Real-Flight 10° Roll Validation (`agriculture.world`)**:
+  - Executed a $10^\circ$ roll validation flight ($0.5\text{ Hz}$, $20.0\text{s}$ maneuver) in `agriculture.world` at hover target $Z \approx 2.41\text{ m}$.
+  - **Results**:
+    - Epipolar RANSAC failure (`strict_E_fail`): **FALSE** (Max 2.0s window low-E fraction: **14.52%** $\ll 70\%$).
+    - Pose recovery failure (`strict_pose_fail`): **FALSE** (Max 2.0s window low-pose fraction: **16.13%** $\ll 70\%$).
+    - Usable pose updates (`num_inliers_pose >= 8`): **90.43%** of frames (up from 18.60% under legacy `dt=50`).
+    - Low pose inlier frames (`num_inliers_pose < 5`): **9.57%** of frames (down from 81.40% under legacy `dt=50`).
+    - Agreement ratio (`num_inliers_pose / num_inliers_E`): Median **0.9906** (99.06% inlier recovery).
+- **Phase 0E Sweep A Reinterpretation (Pure Yaw Escalation, 10–180 deg/s in `boxworld_obstacles_tight`)**:
+  - Epipolar correspondence RANSAC (`num_inliers_E`) remained extremely healthy across all six levels, averaging **$819.1 - 1037.0$ inliers per frame**.
+  - `strict_E_fail = FALSE` across all 6 yaw rate levels ($10, 20, 40, 80, 120, 180\text{ deg/s}$).
+  - **Reinterpretation**: The previous interpretation of Sweep A as Essential Matrix failure is **RETRACTED**. Pure yaw rotation generates a near-zero physical translation baseline ($t_{\text{true}} \approx 0$), inflating unit-scale triangulated depth ($Z_{\text{unit}} \to \infty$) beyond `distanceThresh=1000.0`. Low pose inlier counts during pure yaw holds are unit-scale zero-baseline depth filtering artifacts, and must be interpreted separately from E-RANSAC correspondence quality.
+- **Phase 0E Sweep B Reinterpretation (Roll Attitude Escalation, 5–50 deg in `agriculture.world`)**:
+  - Achieved dominant attitude axis was verified as **ROLL** across all six target levels ($p95 \text{ Roll}: 6.30^\circ - 47.51^\circ$, parasitic pitch $\le 0.82^\circ$, yaw $\le 1.82^\circ$).
+  - Epipolar RANSAC (`num_inliers_E`) remained healthy, averaging **$576.3 - 655.7$ inliers per frame** (`strict_E_fail = FALSE` across all 6 levels).
+  - Pose recovery (`num_inliers_pose`) did NOT trigger strict failure (`strict_pose_fail = FALSE` across all 6 levels). Usable pose updates reached **$87.44\% - 93.56\%$**.
+  - KLT feature tracking remained strong across the full range (**$99.81\% - 100.0\%$ survival rate**, feature velocity up to $21.56\text{ px/fr}$ under `maxLevel=3` pyramidal LK).
+  - **Mechanism**: Dynamic roll oscillation generates lateral acceleration ($a_y = g \tan(\phi)$), producing a non-zero lateral translation baseline ($t_{\text{true}} > 0$). This translation baseline lowers unit-scale depth ($Z_{\text{unit}} < 1000.0\text{m}$), enabling `recoverPose()` to accept $88.70\% - 99.91\%$ of true epipolar inliers.
+- **Experimental World Policy (Forward-Looking)**:
+  - **Phase 0**: Controlled diagnostic characterization may use `boxworld_obstacles_tight` and other synthetic worlds where appropriate.
+  - **Phase 1+**: `configs/gazebo_maps/agriculture.world` is designated as the **PRIMARY** research and testing environment for baseline characterization, failure prediction intervention testing, and comparative evaluations.
+- **Data & Documentation References**:
+  - Audit & Repair: `results/essential_matrix_pipeline_audit.md`, `results/essential_matrix_bookkeeping_repair.md`
+  - Synthetic Matrix: `results/recoverpose_distance_threshold_investigation.md`
+  - Real Flight Validation: `results/recoverpose_1000_10deg_agriculture_validation.md`
+  - Phase 0E Summaries: `results/yaw_sweep_phase0e_v2_summary.md`, `results/tilt_sweep_phase0e_v3_summary.md`
+- **What I Learned**: In monocular visual odometry, metric depth filtering in non-metric unit-scale pose estimation can inadvertently truncate valid correspondences when physical translation baselines are small. Rigorous metric separation between algebraic epipolar RANSAC inliers (`num_inliers_E`) and pose-recovery cheirality inliers (`num_inliers_pose`) is essential to prevent false failure diagnoses.
 

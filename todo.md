@@ -1,40 +1,40 @@
 # Monocular VO Project — Task Audit & TODO List
 
-## Current Task Audit (Phase 0 Fix: Offboard Flight vs. Teleportation)
+## Current Status: Phase 0E Finalization & Phase 1 Planning Checkpoint (2026-09-04)
 
-The following table summarizes the audit conducted on the active trajectory generation pass:
-
-| # | Task Requirement | Status | Detailed Audit Findings |
-| :--- | :--- | :---: | :--- |
-| **1** | **Re-run textured-world flight via `fly_trajectory.py`** | ⚠️ **Partial** | `src/fly_trajectory.py` was adapted to stream offboard setpoints ($v_x = 0.6\text{ m/s}$, $v_y = 0.15\text{ m/s}$, $z = 2.0\text{ m}$). Ground truth log `results/ground_truth_textured_REAL.csv` was created (~20s duration), but flight was interrupted while climbing to ~1.05m before completing the full ~2.0m trajectory. |
-| **2** | **Adapt `fly_trajectory.py` waypoints/path** | ✅ **Complete** | Waypoints and velocity setpoint logic in `src/fly_trajectory.py` are properly configured for real PX4 offboard flight. |
-| **3** | **Concurrently record Ground Truth & VO** | ❌ **Not Done** | `ground_truth_textured_REAL.csv` was recorded, but `vo_trajectory_textured.csv` was **not** recorded concurrently during this real flight. Current `vo_trajectory_textured.csv` in `results/` is still from the previous `animate_drone.py` teleportation run. |
-| **4** | **Ground Truth Sanity Checks (Z-axis smoothness)** | ⚠️ **Partial** | **Z-axis is confirmed smooth** without sawtooth drops (max step change $\Delta z = 0.011\text{ m}$, std dev $0.0028\text{ m}$). However, altitude reached was ~1.05m rather than sustained ~2.0m because flight stopped early. |
-| **5** | **Re-run `correlation.py`** | ⚠️ **Incomplete Data** | Running `correlation.py` against old VO (`animate_drone.py`) and new GT (`ground_truth_textured_REAL.csv`) yields $r_x = +0.8417$, $r_y = +0.1922$, $r_z = +0.3031$. True correlation requires concurrent VO + GT capture during real flight. |
-| **6** | **Update `failure_log.md`** | ❌ **Not Done** | `failure_log.md` currently ends at Entry 7 (Phase 0D). Entry 8 (documenting teleportation bug, root cause, and fix) needs to be written once correlation results are verified. |
+Phase 0E is experimentally complete:
+- **Sweep A (Pure Yaw Escalation)**: 10, 20, 40, 80, 120, 180 deg/s evaluated in `boxworld_obstacles_tight`. `findEssentialMat` epipolar RANSAC inliers (`num_inliers_E`) remained $>800$ per frame (`strict_E_fail = FALSE` across all levels). Pure yaw $t=0$ depth filtering truncation identified as a zero-baseline unit-scale artifact.
+- **`recoverPose` Forensic Audit & Repair**: Resolved conflation between `num_inliers_E` and `num_inliers_pose`. Adopted `distanceThresh=1000.0` as operating envelope parameter. Validated on physical SITL $10^\circ$ roll flight in `agriculture.world` (90.43% valid pose updates, `strict_E_fail = FALSE`, `strict_pose_fail = FALSE`).
+- **Sweep B (Attitude Escalation)**: 5, 10, 20, 30, 40, 50 deg roll oscillation at 0.5 Hz evaluated in `agriculture.world`. `strict_E_fail = FALSE` and `strict_pose_fail = FALSE` across all 6 levels ($87.44\% - 93.56\%$ valid pose updates).
+- **Experimental World Policy**: `agriculture.world` designated as PRIMARY research/testing environment for Phase 1+.
 
 ---
 
-## Action Plan / Next Steps
+## Phase 0 Hard Gate Milestones Summary
 
-1. **Execute Concurrent Real Flight Pass**:
-   - Launch simulation in textured world (`configs/textured.sdf`).
-   - Run `src/record_ground_truth.py` and `src/minimal_vo.py` concurrently while executing `src/fly_trajectory.py`.
-   - Save outputs to `results/ground_truth_textured_REAL.csv` and `results/vo_trajectory_textured_REAL.csv`.
+| Milestone | Description | Status | Reference / Artifact |
+| :---: | :--- | :---: | :--- |
+| **0A** | Sensor + Ground Truth Verification | ✅ **Complete** | 30.4 Hz RGB image + 50 Hz World ENU pose |
+| **0B** | Timestamp Synchronization | ✅ **Complete** | Nearest-neighbor SimTime matching ($\le 20\text{ms}$) |
+| **0C** | Minimal Un-fused Monocular VO Node | ✅ **Complete** | `src/minimal_vo.py` (GFTT + KLT + 5-pt E-RANSAC) |
+| **0D** | Trajectory Alignment & Evaluation | ✅ **Complete** | `src/evaluate_trajectory.py` Sim(3) Umeyama alignment |
+| **0E** | Reproducibility & Scientific Characterization | ✅ **Complete** | Sweep A, Sweep B, metric repair & 10° validation |
 
-2. **Verify Ground Truth Trajectory**:
-   - Perform sanity checks (timestamps unique/varying, positions changing, unique count).
-   - Confirm `pos_z` is smooth and close to the commanded ~2.0m altitude throughout without sawtooth drops.
+---
 
-3. **Compute Axis Shape Correlation**:
-   - Run `python3 src/correlation.py --gt-csv results/ground_truth_textured_REAL.csv --vo-csv results/vo_trajectory_textured_REAL.csv`.
-   - Report per-axis Pearson correlation coefficients ($r_x, r_y, r_z$), ensuring Z-axis correlation is high and smooth.
+## Forward Action Plan (Phase 1 Ready)
 
-4. **Document Bug in `failure_log.md`**:
-   - Add Entry 8 to `failure_log.md` detailing:
-     - Root cause: `animate_drone.py` Gazebo `set_pose` teleportation + disarmed motors + gravity causing sawtooth freefall on Z.
-     - Why 0A/0B missed it: Phase 0A/0B used real PX4 offboard flight.
-     - Resolution: Switched all future trajectory generation to real PX4 offboard flight via `fly_trajectory.py`.
+1. **Phase 0E Final Documentation & Audit**:
+   - Audit all Phase 0E summary reports (`yaw_sweep_phase0e_v2_summary.md`, `tilt_sweep_phase0e_v3_summary.md`, `recoverpose_*.md`).
+   - Update `failure_log.md` with historically accurate reinterpretations of `recoverPose` conflation and Phase 0E synthesis.
+   - Establish forward Experimental World Policy (`agriculture.world` as primary test ground).
 
-5. **Sim(3) Alignment & Benchmark**:
-   - Run `src/evaluate_trajectory.py` to calculate final ATE and RPE metrics and generate evaluation plots.
+2. **Phase 1 Experiment Plan**:
+   - Create `results/phase1_experiment_plan.md` defining 19 required plan components (objectives, severity matrix, achieved-motion metrics, failure criteria, sliding window definitions, metric separation, statistical repetition, confounds, dataset versioning, run invalidation rules).
+   - Freeze VO algorithm, parameters, and simulation execution (no flight runs during Phase 1 planning).
+
+3. **Git Checkpoint Commit & Sync**:
+   - Verify clean working tree (exclude temporary logs, caches, and raw datasets).
+   - Create checkpoint commit: `"Finalize Phase 0E and plan Phase 1"`.
+   - Push commit to `origin/main`.
+

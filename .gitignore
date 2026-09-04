@@ -24,3 +24,13 @@ log/
 .DS_Store
 .vscode/
 .idea/
+
+# Raw dataset logs & plots
+*.csv
+*.png
+scratch/
+
+# External large model collections
+configs/gazebo_models_worlds_collection-master/
+
+

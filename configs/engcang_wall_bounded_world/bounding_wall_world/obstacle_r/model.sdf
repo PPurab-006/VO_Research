@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="obstacle_r">
+    <static>false</static>
+    <link name="link">
+      <inertial>
+        <mass>2.0</mass>
+        <inertia>
+          <ixx>0.25</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.25</iyy>
+          <iyz>0</iyz>
+          <izz>0.25</izz>
+        </inertia>
+      </inertial>
+      <collision name="c1">
+        <geometry>
+          <sphere>
+            <radius>0.025</radius>
+          </sphere>
+        </geometry>
+      </collision>
+      <visual name="v1">
+        <geometry>
+          <sphere>
+            <radius>0.08</radius>
+          </sphere>
+        </geometry>
+        <material>
+          <ambient>0.9 0.4 0.1 1</ambient>
+          <diffuse>1.0 0.5 0.15 1</diffuse>
+          <specular>0.6 0.6 0.6 1</specular>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

@@ -62,3 +62,18 @@ This roadmap governs the experimental evaluation of monocular visual odometry de
 ### Phase 4 — Analysis & Report
 - Synthesize findings into a 2–4 page research report (question, hypothesis, methodology, results, failure analysis, simulation-scoped conclusions).
 - Finalize clean, fully reproducible GitHub repository.
+
+---
+
+## Experimental World Policy
+
+### Phase 0 Policy:
+Controlled characterization and diagnostic benchmarking may use `configs/gazebo_maps/exploration_complex/boxworld_obstacles_tight.world` and other controlled diagnostic worlds where appropriate for isolating specific rotational or geometric variables.
+
+### Phase 1+ Forward Policy:
+`configs/gazebo_maps/agriculture.world` is designated as the **PRIMARY** research and testing environment for Phase 1 baseline characterization, Phase 2 intervention testing, and all subsequent experimental phases.
+
+The `agriculture.world` environment serves as the project's standard benchmark test ground for baseline characterization, intervention testing, and comparative evaluations unless a specific experiment explicitly requires another controlled environment for diagnostic isolation.
+
+*Note: This is a forward-looking policy. Existing historical Phase 0 datasets and experiments recorded in other environments remain preserved as valid historical references.*
+

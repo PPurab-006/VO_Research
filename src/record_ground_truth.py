@@ -69,8 +69,15 @@ class LiveGroundTruthRecorder(Node):
                 target_tf = tf
                 break
 
-        if target_tf is None:
+        if target_tf is None and len(msg.transforms) > 0:
             target_tf = msg.transforms[0]
+
+        if target_tf is None:
+            self.get_logger().warning(
+                f"Target model '{self.model_name}' transform not found in TF message! (Available frames: {[tf.child_frame_id for tf in msg.transforms]}). Skipping sample.",
+                throttle_duration_sec=5.0
+            )
+            return
 
         stamp = target_tf.header.stamp
         if stamp.sec == 0 and stamp.nanosec == 0:

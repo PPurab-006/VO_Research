@@ -103,7 +103,7 @@ def main():
     takeoff_start_time = time.time()
     takeoff_ready = False
     stable_start_time = None
-    TAKEOFF_TIMEOUT_SEC = 8.0
+    TAKEOFF_TIMEOUT_SEC = 12.0
     STABILITY_REQUIRED_SEC = 0.5
     TARGET_MIN_ALT_M = 2.0
 

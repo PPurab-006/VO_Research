@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""
+Phase 3 Full Batch Evaluation Engine (11 Families x 3 Repeats x 3 Mechanisms)
+
+Computes full ATE/RPE and telemetry metrics across active motion window (Z >= 2.0m):
+  - Sim(3) Umeyama Scale-Aligned Trajectory Alignment
+  - ATE RMSE (meters)
+  - Translation RPE (m/step) [standard absolute meter metric]
+  - Translation RPE (scale-normalized / unit-scale) [isolates intrinsic tracking error]
+  - Rotation RPE (deg/step)
+  - Tracking Loss Rate (%)
+  - Recovery Time (seconds & frames)
+  - Trajectory Drift per Meter Traveled (m/m)
+  - Prediction Lead Time (reported as "N/A -- falsified in Phase 2C (VFO)")
+
+Aggregates statistics across n=3 repeats per cell reporting Mean +/- Std and 95% Student-t CIs.
+"""
+
+import os
+import sys
+import math
+import numpy as np
+import pandas as pd
+from scipy.stats import t as student_t
+
+from evaluate_phase3_evo import evaluate_single_run
+
+
+def compute_stats_with_ci(values):
+    vals = np.array(values, dtype=float)
+    n = len(vals)
+    mean_val = float(np.mean(vals))
+    std_val = float(np.std(vals, ddof=1)) if n > 1 else 0.0
+
+    if n > 1 and std_val > 1e-9:
+        t_crit = float(student_t.ppf(0.975, df=n - 1))
+        sem = std_val / math.sqrt(n)
+        margin = t_crit * sem
+        ci_low = mean_val - margin
+        ci_high = mean_val + margin
+    else:
+        margin = 0.0
+        ci_low = mean_val
+        ci_high = mean_val
+
+    return {
+        'n': n,
+        'mean': mean_val,
+        'std': std_val,
+        'margin': margin,
+        'ci_low': ci_low,
+        'ci_high': ci_high,
+        'str_mean_std': f"{mean_val:.4f} +/- {std_val:.4f}",
+        'str_ci': f"[{ci_low:.4f}, {ci_high:.4f}]"
+    }
+
+
+def evaluate_dataset_mechanisms(dataset_dir, gt_csv_path):
+    mechs = {
+        'RAW': os.path.join(dataset_dir, 'raw_vo.csv'),
+        'EIS-GATED': os.path.join(dataset_dir, 'eis_gated_vo.csv'),
+        'DELAYED-TRI': os.path.join(dataset_dir, 'gated_dt_def_a_vo.csv')
+    }
+
+    res_dict = {}
+    for mech_name, vo_csv in mechs.items():
+        if os.path.exists(vo_csv) and os.path.exists(gt_csv_path):
+            eval_res = evaluate_single_run(vo_csv, gt_csv_path)
+            res_dict[mech_name] = eval_res
+        else:
+            res_dict[mech_name] = None
+    return res_dict
+
+
+def run_full_matrix_evaluation(dataset_root="results/datasets"):
+    print("==========================================================================")
+    print("PHASE 3 FULL BATCH EVALUATION MATRIX ENGINE")
+    print("==========================================================================\n")
+
+    families = ['HOVER_L0', 'F1_L2', 'F2_L2', 'F3_L2', 'F4_L2', 'F5_L2', 'F6_L2', 'F7_L2', 'F8_L2', 'F9_L2', 'F10_L3', 'F11_L2']
+    mechs = ['RAW', 'EIS-GATED', 'DELAYED-TRI']
+
+    matrix_results = {}
+
+    for fam in families:
+        matrix_results[fam] = {m: [] for m in mechs}
+
+        for r in [1, 2, 3]:
+            # Look for dataset naming convention phase2a_{fam}_R{r} or p3_{fam}_R{r} or {fam}_R{r}
+            possible_dirs = [
+                os.path.join(dataset_root, f"phase2a_{fam}_R{r}"),
+                os.path.join(dataset_root, f"p3_{fam}_R{r}"),
+                os.path.join(dataset_root, f"{fam}_R{r}"),
+                os.path.join(dataset_root, f"phase2a_{fam}") if r == 1 else None
+            ]
+
+            ds_dir = None
+            for d in possible_dirs:
+                if d and os.path.exists(os.path.join(d, "dataset_gt.csv")):
+                    ds_dir = d
+                    break
+
+            if not ds_dir:
+                continue
+
+            gt_csv = os.path.join(ds_dir, "dataset_gt.csv")
+            run_eval = evaluate_dataset_mechanisms(ds_dir, gt_csv)
+
+            for m in mechs:
+                if run_eval[m] is not None:
+                    matrix_results[fam][m].append(run_eval[m])
+
+    # Print summary of evaluated cells
+    print(f"{'Family':<12} | {'Mechanism':<12} | {'Evaluated Runs':<14} | {'ATE RMSE (m)':<22} | {'RPE-t (m/step)':<22} | {'RPE-t (scale-norm)':<24}")
+    print("-" * 105)
+
+    summary_rows = []
+
+    for fam in families:
+        for m in mechs:
+            runs = matrix_results[fam][m]
+            n_runs = len(runs)
+            if n_runs > 0:
+                ates = [r['ate_rmse'] for r in runs]
+                rpes_m = [r['rpe_t_mean'] for r in runs]
+                rpes_norm = [r['rpe_t_norm'] for r in runs]
+
+                s_ate = compute_stats_with_ci(ates)
+                s_rpe_m = compute_stats_with_ci(rpes_m)
+                s_rpe_norm = compute_stats_with_ci(rpes_norm)
+
+                print(f"{fam:<12} | {m:<12} | {n_runs:<14} | {s_ate['str_mean_std']:<22} | {s_rpe_m['str_mean_std']:<22} | {s_rpe_norm['str_mean_std']:<24}")
+
+                summary_rows.append({
+                    'family': fam,
+                    'mechanism': m,
+                    'n_runs': n_runs,
+                    'ate_mean': s_ate['mean'],
+                    'ate_std': s_ate['std'],
+                    'ate_ci': s_ate['str_ci'],
+                    'rpe_m_mean': s_rpe_m['mean'],
+                    'rpe_m_std': s_rpe_m['std'],
+                    'rpe_m_ci': s_rpe_m['str_ci'],
+                    'rpe_norm_mean': s_rpe_norm['mean'],
+                    'rpe_norm_std': s_rpe_norm['std'],
+                    'rpe_norm_ci': s_rpe_norm['str_ci']
+                })
+            else:
+                print(f"{fam:<12} | {m:<12} | {0:<14} | {'N/A (Missing Data)':<22} | {'N/A':<22} | {'N/A':<24}")
+
+    return matrix_results, pd.DataFrame(summary_rows)
+
+
+if __name__ == '__main__':
+    run_full_matrix_evaluation()

@@ -92,10 +92,11 @@ def evaluate_single_run(vo_csv_path, gt_csv_path):
     ape_metric.process_data((traj_gt, traj_vo_aligned))
     ate_rmse = ape_metric.get_statistic(metrics.StatisticsType.rmse)
 
-    # 2. Translation RPE (m/step)
+    # 2. Translation RPE (m/step) and Scale-Normalized RPE-t (unit-scale)
     rpe_t_metric = metrics.RPE(metrics.PoseRelation.translation_part, delta=1, delta_unit=metrics.Unit.frames)
     rpe_t_metric.process_data((traj_gt, traj_vo_aligned))
     rpe_t_mean = rpe_t_metric.get_statistic(metrics.StatisticsType.mean)
+    rpe_t_norm = float(rpe_t_mean / s_factor) if s_factor > 1e-6 else 0.0
 
     # 3. Rotation RPE (deg/step)
     rpe_r_metric = metrics.RPE(metrics.PoseRelation.rotation_angle_rad, delta=1, delta_unit=metrics.Unit.frames)
@@ -120,6 +121,7 @@ def evaluate_single_run(vo_csv_path, gt_csv_path):
         'n_frames': len(df_vo_act),
         'ate_rmse': float(ate_rmse),
         'rpe_t_mean': float(rpe_t_mean),
+        'rpe_t_norm': float(rpe_t_norm),
         'rpe_r_mean_deg': float(rpe_r_mean_deg),
         'tracking_loss_pct': float(tracking_loss_pct),
         'recovery_time_sec': float(rec_secs),

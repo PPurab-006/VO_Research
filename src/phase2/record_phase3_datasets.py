@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+"""
+Phase 3 Dataset Recording & Processing Orchestrator
+
+Sequentially records missing raw camera datasets in agriculture.world using PX4 SITL.
+Enforces hard gates on active window altitude (Z >= 2.0m), flight duration (>= 18.0s), and image capture.
+
+Separates dataset namespaces:
+  - CORE Matrix: p3_{family}_{severity}_raw_{run} (F1, F2, F4, F6, F10, F11)
+  - EXPLORATORY Matrix: p3x_{family}_{severity}_raw_{run} (F3, F7, F8, HOVER)
+
+After each raw recording, runs offline VO for all 3 mechanisms:
+  1. RAW: raw_vo.csv
+  2. EIS-GATED: eis_gated_vo.csv (15.0 deg/s threshold)
+  3. DELAYED-TRI: gated_dt_def_a_vo.csv (min_non_r_obs = 3)
+"""
+
+import argparse
+import os
+import sys
+import time
+import subprocess
+import pandas as pd
+
+from record_single_phase2a_dataset import record_dataset, kill_all_sim_processes
+
+
+def verify_dataset_hard_gates(dataset_dir, min_duration=18.0, min_alt=2.0):
+    gt_csv = os.path.join(dataset_dir, "dataset_gt.csv")
+    cam_csv = os.path.join(dataset_dir, "camera_frames.csv")
+    img_dir = os.path.join(dataset_dir, "images")
+
+    if not os.path.exists(gt_csv) or not os.path.exists(cam_csv) or not os.path.exists(img_dir):
+        print(f"[FAIL] Missing files in dataset directory {dataset_dir}")
+        return False, "Missing files"
+
+    df_gt = pd.read_csv(gt_csv)
+    df_cam = pd.read_csv(cam_csv)
+
+    if len(df_gt) < 100 or len(df_cam) < 100:
+        print(f"[FAIL] Dataset {dataset_dir} has insufficient records (GT: {len(df_gt)}, Cam: {len(df_cam)})")
+        return False, "Insufficient frame count"
+
+    gt_t = df_gt['timestamp_total_sec'].values.astype(float)
+    z_gt = df_gt['pos_z'].values.astype(float)
+
+    idx_act = np.where(z_gt >= min_alt)[0] if 'pos_z' in df_gt.columns else np.where(df_gt['z'].values >= min_alt)[0]
+    if len(idx_act) < 10:
+        print(f"[FAIL] Dataset {dataset_dir} failed altitude hard gate (Z >= {min_alt}m never achieved)")
+        return False, "Altitude gate failed"
+
+    t_act_start = gt_t[idx_act[0]]
+    t_act_end = gt_t[idx_act[-1]]
+    act_dur = t_act_end - t_act_start
+
+    if act_dur < min_duration:
+        print(f"[FAIL] Dataset {dataset_dir} failed active duration gate ({act_dur:.1f}s < {min_duration}s)")
+        return False, "Duration gate failed"
+
+    # Check images exist
+    n_imgs = len([f for f in os.listdir(img_dir) if f.endswith('.png')])
+    if n_imgs < len(df_cam) - 5:
+        print(f"[FAIL] Dataset {dataset_dir} image count mismatch ({n_imgs} PNGs vs {len(df_cam)} CSV rows)")
+        return False, "Image count mismatch"
+
+    print(f"[PASS] Hard gates verified for {dataset_dir} (Duration: {act_dur:.1f}s, Max Alt: {np.max(z_gt):.2f}m, Frames: {n_imgs})")
+    return True, "Passed"
+
+
+def run_offline_vo_all_mechs(dataset_dir):
+    gt_csv = os.path.join(dataset_dir, "dataset_gt.csv")
+    raw_vo_csv = os.path.join(dataset_dir, "raw_vo.csv")
+    gated_vo_csv = os.path.join(dataset_dir, "eis_gated_vo.csv")
+    dt_vo_csv = os.path.join(dataset_dir, "gated_dt_def_a_vo.csv")
+
+    cmd_base = [sys.executable, "src/phase2/run_offline_vo.py", "--dataset-dir", dataset_dir, "--gt-csv", gt_csv]
+
+    # 1. RAW VO
+    print(f"  Running Offline VO: RAW -> {raw_vo_csv}...")
+    cmd_raw = cmd_base + ["--output-csv", raw_vo_csv]
+    subprocess.run(cmd_raw, check=True)
+
+    # 2. EIS-GATED VO
+    print(f"  Running Offline VO: EIS-GATED -> {gated_vo_csv}...")
+    cmd_gated = cmd_base + ["--output-csv", gated_vo_csv, "--eis", "--eis-mode", "gated", "--gate-thresh", "15.0"]
+    subprocess.run(cmd_gated, check=True)
+
+    # 3. DELAYED-TRI VO
+    print(f"  Running Offline VO: DELAYED-TRI -> {dt_vo_csv}...")
+    cmd_dt = cmd_base + ["--output-csv", dt_vo_csv, "--eis", "--eis-mode", "gated", "--gate-thresh", "15.0",
+                         "--delayed-triangulation", "--r-frame-def", "yaw_rate", "--min-non-r-obs", "3"]
+    subprocess.run(cmd_dt, check=True)
+
+    print(f"  [SUCCESS] All 3 offline VO mechanisms processed for {dataset_dir}")
+
+
+def record_and_process_batch(target_list):
+    for item in target_list:
+        fam = item['family']
+        sev = item['severity']
+        run_idx = item['run']
+        prefix = item['prefix'] # 'p3' for Core, 'p3x' for Exploratory
+
+        run_id = f"{prefix}_{fam}_L{sev}_R{run_idx}"
+        dataset_dir = f"results/datasets/{run_id}"
+
+        print(f"\n==========================================================================")
+        print(f"RECORDING & PROCESSING CELL: {run_id} ({item['type'].upper()} TRACK)")
+        print(f"==========================================================================")
+
+        if os.path.exists(os.path.join(dataset_dir, "gated_dt_def_a_vo.csv")):
+            print(f"Dataset {run_id} already fully processed. Skipping re-recording.")
+            continue
+
+        if not os.path.exists(os.path.join(dataset_dir, "dataset_gt.csv")):
+            # Record raw flight dataset
+            record_dataset(family=fam, severity=sev, duration=20.0, run_id=run_id)
+
+        # Verify hard gates
+        passed, msg = verify_dataset_hard_gates(dataset_dir)
+        if not passed:
+            print(f"[CRITICAL ERROR] Dataset {run_id} failed hard gate check: {msg}")
+            print("Stopping batch run for manual inspection per project protocol.")
+            sys.exit(1)
+
+        # Process offline VO
+        run_offline_vo_all_mechs(dataset_dir)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Phase 3 Batch Recording & Processing Orchestrator")
+    parser.add_argument('--track', choices=['core', 'exploratory', 'all'], default='all', help="Track to record")
+    args = parser.parse_args()
+
+    import numpy as np
+    globals()['np'] = np
+
+    core_targets = [
+        {'family': 'F1', 'severity': 2, 'run': 1, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F1', 'severity': 2, 'run': 2, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F1', 'severity': 2, 'run': 3, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F2', 'severity': 2, 'run': 1, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F2', 'severity': 2, 'run': 2, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F2', 'severity': 2, 'run': 3, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F4', 'severity': 2, 'run': 1, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F4', 'severity': 2, 'run': 2, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F4', 'severity': 2, 'run': 3, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F6', 'severity': 2, 'run': 1, 'prefix': 'p3', 'type': 'core'}, # Fresh per Amendment 1
+        {'family': 'F6', 'severity': 2, 'run': 2, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F6', 'severity': 2, 'run': 3, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F10', 'severity': 3, 'run': 1, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F10', 'severity': 3, 'run': 2, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F10', 'severity': 3, 'run': 3, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F11', 'severity': 2, 'run': 1, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F11', 'severity': 2, 'run': 2, 'prefix': 'p3', 'type': 'core'},
+        {'family': 'F11', 'severity': 2, 'run': 3, 'prefix': 'p3', 'type': 'core'},
+    ]
+
+    exploratory_targets = [
+        {'family': 'HOVER', 'severity': 0, 'run': 1, 'prefix': 'p3x', 'type': 'exploratory'},
+        {'family': 'HOVER', 'severity': 0, 'run': 2, 'prefix': 'p3x', 'type': 'exploratory'},
+        {'family': 'HOVER', 'severity': 0, 'run': 3, 'prefix': 'p3x', 'type': 'exploratory'},
+        {'family': 'F3', 'severity': 2, 'run': 1, 'prefix': 'p3x', 'type': 'exploratory'},
+        {'family': 'F3', 'severity': 2, 'run': 2, 'prefix': 'p3x', 'type': 'exploratory'},
+        {'family': 'F3', 'severity': 2, 'run': 3, 'prefix': 'p3x', 'type': 'exploratory'},
+        {'family': 'F7', 'severity': 2, 'run': 1, 'prefix': 'p3x', 'type': 'exploratory'},
+        {'family': 'F7', 'severity': 2, 'run': 2, 'prefix': 'p3x', 'type': 'exploratory'},
+        {'family': 'F7', 'severity': 2, 'run': 3, 'prefix': 'p3x', 'type': 'exploratory'},
+        {'family': 'F8', 'severity': 2, 'run': 1, 'prefix': 'p3x', 'type': 'exploratory'},
+        {'family': 'F8', 'severity': 2, 'run': 8, 'prefix': 'p3x', 'type': 'exploratory'}, # R2
+        {'family': 'F8', 'severity': 2, 'run': 3, 'prefix': 'p3x', 'type': 'exploratory'},
+    ]
+    # Correct run index for F8 R2
+    exploratory_targets[10]['run'] = 2
+
+    targets = []
+    if args.track in ['core', 'all']:
+        targets.extend(core_targets)
+    if args.track in ['exploratory', 'all']:
+        targets.extend(exploratory_targets)
+
+    record_and_process_batch(targets)
+
+
+if __name__ == '__main__':
+    main()

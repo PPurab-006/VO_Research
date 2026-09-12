@@ -74,81 +74,93 @@ def evaluate_dataset_mechanisms(dataset_dir, gt_csv_path):
 
 def run_full_matrix_evaluation(dataset_root="results/datasets"):
     print("==========================================================================")
-    print("PHASE 3 FULL BATCH EVALUATION MATRIX ENGINE")
+    print("PHASE 3 BATCH EVALUATION MATRIX ENGINE (CORE vs EXPLORATORY)")
     print("==========================================================================\n")
 
-    families = ['HOVER_L0', 'F1_L2', 'F2_L2', 'F3_L2', 'F4_L2', 'F5_L2', 'F6_L2', 'F7_L2', 'F8_L2', 'F9_L2', 'F10_L3', 'F11_L2']
+    core_families = ['F1_L2', 'F2_L2', 'F4_L2', 'F5_L2', 'F6_L2', 'F9_L2', 'F10_L3', 'F11_L2']
+    exploratory_families = ['HOVER_L0', 'F3_L2', 'F7_L2', 'F8_L2']
     mechs = ['RAW', 'EIS-GATED', 'DELAYED-TRI']
 
-    matrix_results = {}
+    def eval_family_group(fam_list, is_exploratory=False):
+        group_results = {}
+        summary_rows = []
 
-    for fam in families:
-        matrix_results[fam] = {m: [] for m in mechs}
+        track_label = "EXPLORATORY TRACK (PRELIMINARY)" if is_exploratory else "CORE MATRIX (PHASE-1-VALIDATED)"
+        print(f"\n>>> {track_label} <<<")
+        print(f"{'Family':<12} | {'Mechanism':<12} | {'Evaluated Runs':<14} | {'ATE RMSE (m)':<22} | {'RPE-t (m/step)':<22} | {'RPE-t (scale-norm)':<24}")
+        print("-" * 105)
 
-        for r in [1, 2, 3]:
-            # Look for dataset naming convention phase2a_{fam}_R{r} or p3_{fam}_R{r} or {fam}_R{r}
-            possible_dirs = [
-                os.path.join(dataset_root, f"phase2a_{fam}_R{r}"),
-                os.path.join(dataset_root, f"p3_{fam}_R{r}"),
-                os.path.join(dataset_root, f"{fam}_R{r}"),
-                os.path.join(dataset_root, f"phase2a_{fam}") if r == 1 else None
-            ]
+        for fam in fam_list:
+            group_results[fam] = {m: [] for m in mechs}
 
-            ds_dir = None
-            for d in possible_dirs:
-                if d and os.path.exists(os.path.join(d, "dataset_gt.csv")):
-                    ds_dir = d
-                    break
+            for r in [1, 2, 3]:
+                if is_exploratory:
+                    possible_dirs = [
+                        os.path.join(dataset_root, f"p3x_{fam}_R{r}"),
+                        os.path.join(dataset_root, f"p3x_{fam}") if r == 1 else None
+                    ]
+                else:
+                    possible_dirs = [
+                        os.path.join(dataset_root, f"p3_{fam}_R{r}"),
+                        os.path.join(dataset_root, f"phase2a_{fam}_R{r}"),
+                        os.path.join(dataset_root, f"{fam}_R{r}"),
+                        os.path.join(dataset_root, f"phase2a_{fam}") if r == 1 else None
+                    ]
 
-            if not ds_dir:
-                continue
+                ds_dir = None
+                for d in possible_dirs:
+                    if d and os.path.exists(os.path.join(d, "dataset_gt.csv")):
+                        ds_dir = d
+                        break
 
-            gt_csv = os.path.join(ds_dir, "dataset_gt.csv")
-            run_eval = evaluate_dataset_mechanisms(ds_dir, gt_csv)
+                if not ds_dir:
+                    continue
+
+                gt_csv = os.path.join(ds_dir, "dataset_gt.csv")
+                run_eval = evaluate_dataset_mechanisms(ds_dir, gt_csv)
+
+                for m in mechs:
+                    if run_eval[m] is not None:
+                        group_results[fam][m].append(run_eval[m])
 
             for m in mechs:
-                if run_eval[m] is not None:
-                    matrix_results[fam][m].append(run_eval[m])
+                runs = group_results[fam][m]
+                n_runs = len(runs)
+                if n_runs > 0:
+                    ates = [r['ate_rmse'] for r in runs]
+                    rpes_m = [r['rpe_t_mean'] for r in runs]
+                    rpes_norm = [r['rpe_t_norm'] for r in runs]
 
-    # Print summary of evaluated cells
-    print(f"{'Family':<12} | {'Mechanism':<12} | {'Evaluated Runs':<14} | {'ATE RMSE (m)':<22} | {'RPE-t (m/step)':<22} | {'RPE-t (scale-norm)':<24}")
-    print("-" * 105)
+                    s_ate = compute_stats_with_ci(ates)
+                    s_rpe_m = compute_stats_with_ci(rpes_m)
+                    s_rpe_norm = compute_stats_with_ci(rpes_norm)
 
-    summary_rows = []
+                    print(f"{fam:<12} | {m:<12} | {n_runs:<14} | {s_ate['str_mean_std']:<22} | {s_rpe_m['str_mean_std']:<22} | {s_rpe_norm['str_mean_std']:<24}")
 
-    for fam in families:
-        for m in mechs:
-            runs = matrix_results[fam][m]
-            n_runs = len(runs)
-            if n_runs > 0:
-                ates = [r['ate_rmse'] for r in runs]
-                rpes_m = [r['rpe_t_mean'] for r in runs]
-                rpes_norm = [r['rpe_t_norm'] for r in runs]
+                    summary_rows.append({
+                        'track': 'exploratory' if is_exploratory else 'core',
+                        'family': fam,
+                        'mechanism': m,
+                        'n_runs': n_runs,
+                        'ate_mean': s_ate['mean'],
+                        'ate_std': s_ate['std'],
+                        'ate_ci': s_ate['str_ci'],
+                        'rpe_m_mean': s_rpe_m['mean'],
+                        'rpe_m_std': s_rpe_m['std'],
+                        'rpe_m_ci': s_rpe_m['str_ci'],
+                        'rpe_norm_mean': s_rpe_norm['mean'],
+                        'rpe_norm_std': s_rpe_norm['std'],
+                        'rpe_norm_ci': s_rpe_norm['str_ci']
+                    })
+                else:
+                    print(f"{fam:<12} | {m:<12} | {0:<14} | {'N/A (Missing Data)':<22} | {'N/A':<22} | {'N/A':<24}")
 
-                s_ate = compute_stats_with_ci(ates)
-                s_rpe_m = compute_stats_with_ci(rpes_m)
-                s_rpe_norm = compute_stats_with_ci(rpes_norm)
+        return group_results, pd.DataFrame(summary_rows)
 
-                print(f"{fam:<12} | {m:<12} | {n_runs:<14} | {s_ate['str_mean_std']:<22} | {s_rpe_m['str_mean_std']:<22} | {s_rpe_norm['str_mean_std']:<24}")
+    core_res, df_core = eval_family_group(core_families, is_exploratory=False)
+    expl_res, df_expl = eval_family_group(exploratory_families, is_exploratory=True)
 
-                summary_rows.append({
-                    'family': fam,
-                    'mechanism': m,
-                    'n_runs': n_runs,
-                    'ate_mean': s_ate['mean'],
-                    'ate_std': s_ate['std'],
-                    'ate_ci': s_ate['str_ci'],
-                    'rpe_m_mean': s_rpe_m['mean'],
-                    'rpe_m_std': s_rpe_m['std'],
-                    'rpe_m_ci': s_rpe_m['str_ci'],
-                    'rpe_norm_mean': s_rpe_norm['mean'],
-                    'rpe_norm_std': s_rpe_norm['std'],
-                    'rpe_norm_ci': s_rpe_norm['str_ci']
-                })
-            else:
-                print(f"{fam:<12} | {m:<12} | {0:<14} | {'N/A (Missing Data)':<22} | {'N/A':<22} | {'N/A':<24}")
-
-    return matrix_results, pd.DataFrame(summary_rows)
+    return (core_res, expl_res), pd.concat([df_core, df_expl], ignore_index=True)
 
 
 if __name__ == '__main__':

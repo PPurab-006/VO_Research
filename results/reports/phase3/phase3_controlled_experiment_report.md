@@ -1,5 +1,5 @@
 # Phase 3: Controlled Head-to-Head Experiment Report
-**RAW vs EIS-GATED vs Delayed-Triangulation Across Full F1-F11 Motion Severity Matrix**
+**RAW vs EIS-GATED vs Delayed-Triangulation Across Motion Severity Matrix**
 
 ---
 
@@ -7,7 +7,7 @@
 
 ### Amendment 1 — F6 Scope Clarification
 - Historical `phase2a_F6_L2` used a $120^\circ$ continuous yaw ramp. Phase 1 F6 specifies $\pm 30^\circ$ yaw oscillation at $0.25$ Hz.
-- Decision: Freshly record all 3 repeats (R1, R2, R3) for F6 in Phase 3 to maintain strict parameter equivalence.
+- Decision: Freshly record all 3 repeats (R1, R2, R3) for F6 in Phase 3 under `p3_F6_L2_raw_R1..R3` to maintain strict parameter equivalence.
 
 ### Amendment 2 — Delayed-Triangulation Parameter Lock
 - Sensitivity sweep over minimum non-rotational observation threshold $min\_non\_r\_obs \in \{3, 5, 8\}$ executed on F5, F6, F9:
@@ -98,15 +98,56 @@ Umeyama Sim(3) alignment solves $s_{RAW}^* = 0.091651$ as the UNIQUE global mini
 
 The F9-only $n=3$ comparison (RAW ATE $3.32 \pm 0.44$m vs GATED ATE $3.02 \pm 0.27$m) shows overlapping confidence intervals and does not by itself demonstrate a statistically distinguishable effect at this sample size—consistent with Phase 2's own *"small but real improvement"* characterization (not a large, obviously significant effect). 
 
-The `evo` evaluation pipeline itself is verified correct (Step 1/2 causal test + scale-normalized RPE addition), so proceeding to the full $11\text{ families} \times 3\text{ mechanisms}$ matrix is justified to determine whether the effect is real once properly aggregated across all motion severity regimes—this single cell was never powered to settle that question alone.
+The `evo` evaluation pipeline itself is verified correct (Step 1/2 causal test + scale-normalized RPE addition), so proceeding to the full matrix evaluation is justified to determine whether the effect is real once properly aggregated across all motion severity regimes—this single cell was never powered to settle that question alone.
 
-| Metric | RAW Baseline | EIS-GATED Actual | Rescaled-RAW ($s=0.1099$) | Scale Factor Explanation Status | Real Mechanism |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| **RPE-t (meters)** | $0.0838$ m/step | $0.0980$ m/step | **$0.0978$ m/step** | **CONFIRMED** | Scaling step deltas by $1.198\times$ expands per-step metric errors. |
-| **RPE-t (scale-normalized)** | $0.9143$ units/step | $0.8925$ units/step | **$0.9143$ units/step** | **RESOLVED** | Per-step tracking error in unit space is $-0.81\%$ lower in GATED. |
-| **ATE RMSE** | $3.0963$ m | $2.7015$ m | **$3.4275$ m** | **REJECTED** | EIS-GATED derotation removes false rotational optical flow, preserving true trajectory shape. |
+---
 
-**Unified Physical Mechanism**:
-1. **ATE Improvement ($3.096\text{m} \to 2.701\text{m}$)**: EIS-GATED derotation removes rotational optical flow contamination during high-yaw bursts. This prevents false rotation-translation cross-coupling and maintains correct trajectory curvature, improving global shape alignment (ATE RMSE reduces from $3.096$m to $2.701$m on R1, and $3.32$m to $3.02$m across R1-R3).
-2. **RPE-t Apparent Meter Regression ($0.0838 \to 0.0980\text{ m/step}$)**: By mitigating rotational image blur, EIS-GATED retains higher feature tracking quality across frames. This allows the VO node to estimate translation steps with larger effective baseline, resulting in a slightly higher recovered scale factor ($s=0.1099$ vs $s=0.0917$). When frame-to-frame delta vectors are multiplied by a $19.8\%$ larger scale factor, per-step translation errors in meters scale proportionally ($0.0838 \times 1.198 = 0.0978$ m/step), matching GATED's actual $0.0980$ m/step. When evaluated in scale-normalized unit VO space, per-step tracking error is slightly better in GATED ($0.8980$ vs $0.9053$ units/step).
+## SECTION A — Core Matrix (Phase-1-Validated Families: F1, F2, F4, F5, F6, F9, F10, F11)
 
+> [!NOTE]
+> **Primary Study Matrix**: This section contains the core 8 motion families characterized in Phase 1 and validated across $n=3$ independent repeats per cell. All core datasets use the `p3_{family}_{severity}_{mechanism}_{run}` layout.
+
+| Motion Family | Mechanism | Valid Pose % | Tracking Loss % | ATE RMSE (m) | RPE-t (meters) | RPE-t (scale-norm) | Drift / Meter (m/m) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **F5_L2** (Pitch Trans) | **RAW** | $90.54\%$ | $9.46\%$ | $2.8183 \pm 0.0664$ | $0.0374 \pm 0.0011$ | $1.0671 \pm 0.0237$ | $0.0782 \pm 0.0018$ |
+| | **EIS-GATED** | $90.03\%$ | $9.97\%$ | $2.9046 \pm 0.0927$ | $0.0394 \pm 0.0003$ | $1.0799 \pm 0.0044$ | $0.0806 \pm 0.0025$ |
+| | **DELAYED-TRI** | $90.03\%$ | $9.97\%$ | $2.9046 \pm 0.0927$ | $0.0394 \pm 0.0003$ | $1.0799 \pm 0.0044$ | $0.0806 \pm 0.0025$ |
+| **F6_L2** (Pure Yaw) | **RAW** | [Pending Record] | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] |
+| | **EIS-GATED** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] |
+| | **DELAYED-TRI** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] |
+| **F9_L2** (Trans + Fast Yaw) | **RAW** | $93.54\%$ | $6.46\%$ | $3.3206 \pm 0.5420$ | $0.0795 \pm 0.0090$ | $0.9053 \pm 0.0328$ | $0.1059 \pm 0.0152$ |
+| | **EIS-GATED** | $92.25\%$ | $7.75\%$ | $3.0235 \pm 0.3281$ | $0.0864 \pm 0.0130$ | $0.8980 \pm 0.0093$ | $0.0924 \pm 0.0091$ |
+| | **DELAYED-TRI** | $55.32\%$ | $44.68\%$ | $2.7609 \pm 0.2915$ | $0.0775 \pm 0.0033$ | $0.4472 \pm 0.0167$ | $0.0851 \pm 0.0082$ |
+
+*(Remaining Core matrix cells: F1, F2, F4, F6, F10, F11 will populate as flight recordings complete)*
+
+---
+
+## SECTION B — Exploratory Additions (F3, F7, F8, HOVER_L0 — Preliminary)
+
+> [!WARNING]
+> **Exploratory Track Disclaimer**:
+> These results are **suggestive only** and have **NOT** undergone Phase 1's validation process. They are reported for completeness and as candidates for future characterization work, **NOT** as part of the core validated findings. Datasets in this section use the `p3x_{family}_{severity}_{mechanism}_{run}` layout and are **NEVER** merged into Core Matrix statistics.
+
+| Exploratory Family | Mechanism | Valid Pose % | Tracking Loss % | ATE RMSE (m) | RPE-t (meters) | RPE-t (scale-norm) | Status |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **HOVER_L0** (Zero-Motion) | **RAW** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | Diagnostic Control Only |
+| | **EIS-GATED** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | Diagnostic Control Only |
+| | **DELAYED-TRI** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | Diagnostic Control Only |
+| **F3_L2** (Vertical Climb) | **RAW** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | Preliminary |
+| | **EIS-GATED** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | Preliminary |
+| | **DELAYED-TRI** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | Preliminary |
+| **F7_L2** (Pitch + Yaw) | **RAW** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | Preliminary |
+| | **EIS-GATED** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | Preliminary |
+| | **DELAYED-TRI** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | Preliminary |
+| **F8_L2** (Roll + Yaw) | **RAW** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | Preliminary |
+| | **EIS-GATED** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | Preliminary |
+| | **DELAYED-TRI** | [Pending] | [Pending] | [Pending] | [Pending] | [Pending] | Preliminary |
+
+---
+
+## Deliverables & Associated Documents
+- **Exploratory Definitions**: [exploratory_family_definitions.md](file:///home/purab/Purab/Projects/ROS/results/reports/phase3/exploratory_family_definitions.md)
+- **Causal Test Script**: [test_scale_causal.py](file:///home/purab/Purab/Projects/ROS/src/phase2/test_scale_causal.py)
+- **Batch Evaluation Engine**: [run_phase3_full_eval.py](file:///home/purab/Purab/Projects/ROS/src/phase2/run_phase3_full_eval.py)
+- **Recording & Processing Orchestrator**: [record_phase3_datasets.py](file:///home/purab/Purab/Projects/ROS/src/phase2/record_phase3_datasets.py)

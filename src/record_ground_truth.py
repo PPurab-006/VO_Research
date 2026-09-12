@@ -5,7 +5,10 @@ Live Gazebo Ground-Truth Pose Recorder (ROS 2)
 Subscribes directly to Gazebo /world/<world>/dynamic_pose/info (tf2_msgs/msg/TFMessage)
 and logs position & orientation at high resolution (~50 Hz) to a CSV file.
 
-Includes immediate file open & flush for robust streaming.
+Timestamp Provenance Specification:
+Explicitly sets use_sim_time=True. When Gazebo TFMessage header timestamps are unpopulated
+(0, 0), the node uses self.get_clock().now().to_msg(), obtaining ROS simulation time from /clock.
+This guarantees that future GT telemetry and VO camera headers occupy the exact same simulation-clock domain.
 """
 
 import os
@@ -15,12 +18,16 @@ import argparse
 import signal
 import rclpy
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 from tf2_msgs.msg import TFMessage
 
 
 class LiveGroundTruthRecorder(Node):
     def __init__(self, topic_name: str, output_dir: str, filename: str, model_name: str, max_samples: int):
         super().__init__('live_ground_truth_recorder')
+        # Enforce ROS 2 simulation time domain matching /clock and camera topics
+        self.set_parameters([Parameter('use_sim_time', Parameter.Type.BOOL, True)])
+
         self.topic_name = topic_name
         self.output_dir = output_dir
         self.filename = filename
@@ -34,6 +41,7 @@ class LiveGroundTruthRecorder(Node):
         self.get_logger().info(f"Subscribing to LIVE ground-truth pose topic: '{self.topic_name}'")
         self.get_logger().info(f"Target model: '{self.model_name}' | Max samples: {self.max_samples}")
         self.get_logger().info(f"Saving output to: '{os.path.abspath(self.csv_path)}'")
+        self.get_logger().info("Timestamp Domain: Enforced ROS simulation time (use_sim_time=True via /clock)")
 
         # Open CSV file immediately and write header
         self.csv_file = open(self.csv_path, 'w', newline='')
@@ -79,21 +87,19 @@ class LiveGroundTruthRecorder(Node):
             )
             return
 
+        # Timestamp Provenance Policy:
+        # 1. Prefer transform header timestamp if valid non-zero simulation stamp.
+        # 2. Fall back directly to node simulation clock self.get_clock().now() (use_sim_time=True via /clock).
+        # 3. Never fall back to wall-clock time.time().
         stamp = target_tf.header.stamp
         if stamp.sec == 0 and stamp.nanosec == 0:
-            if msg.transforms[0].header.stamp.sec != 0 or msg.transforms[0].header.stamp.nanosec != 0:
+            if len(msg.transforms) > 0 and (msg.transforms[0].header.stamp.sec != 0 or msg.transforms[0].header.stamp.nanosec != 0):
                 stamp = msg.transforms[0].header.stamp
             else:
                 stamp = self.get_clock().now().to_msg()
 
-        if stamp.sec == 0 and stamp.nanosec == 0:
-            import time
-            now_f = time.time()
-            sec = int(now_f)
-            nanosec = int((now_f - sec) * 1e9)
-        else:
-            sec = stamp.sec
-            nanosec = stamp.nanosec
+        sec = stamp.sec
+        nanosec = stamp.nanosec
         total_sec = sec + nanosec * 1e-9
 
         pos = target_tf.transform.translation
@@ -119,7 +125,7 @@ class LiveGroundTruthRecorder(Node):
 
         if self.sample_count % 100 == 0 or self.sample_count == 1:
             self.get_logger().info(
-                f"[{self.sample_count}] LIVE GT Stamp: {total_sec:.3f} s | "
+                f"[{self.sample_count}] LIVE GT Stamp (Sim): {total_sec:.3f} s | "
                 f"Pos: ({pos.x:.4f}, {pos.y:.4f}, {pos.z:.4f}) m | "
                 f"Quat(xyzw): ({rot.x:.4f}, {rot.y:.4f}, {rot.z:.4f}, {rot.w:.4f})"
             )
@@ -148,51 +154,54 @@ def main():
     parser.add_argument(
         '--topic',
         default='/world/textured/dynamic_pose/info',
-        help="ROS 2 ground-truth pose topic"
+        help='Gazebo TFMessage pose topic'
     )
     parser.add_argument(
         '--output-dir',
         default='results',
-        help="Directory to save CSV log"
+        help='Output directory for CSV files'
     )
     parser.add_argument(
         '--filename',
-        default='ground_truth_textured_REAL.csv',
-        help="Output CSV filename"
+        default='ground_truth_live.csv',
+        help='Output CSV filename'
     )
     parser.add_argument(
         '--model-name',
         default='x500_mono_cam_0',
-        help="Target model name in TF message"
+        help='Target model name to filter from TFMessage'
     )
     parser.add_argument(
         '--max-samples',
         type=int,
-        default=5000,
-        help="Max samples to record"
+        default=1000,
+        help='Maximum number of pose samples to record before exiting'
     )
-
     args = parser.parse_args()
 
     rclpy.init()
-    node = LiveGroundTruthRecorder(args.topic, args.output_dir, args.filename, args.model_name, args.max_samples)
+    node = LiveGroundTruthRecorder(
+        topic_name=args.topic,
+        output_dir=args.output_dir,
+        filename=args.filename,
+        model_name=args.model_name,
+        max_samples=args.max_samples
+    )
 
-    def sig_handler(sig, frame):
-        print("\n[INFO] Signal received. Flushing and closing CSV before exiting...")
-        node.close_csv()
-        if rclpy.ok():
-            rclpy.shutdown()
+    def signal_handler(sig, frame):
+        node.get_logger().info("SIGINT/SIGTERM received. Saving CSV and shutting down...")
+        node.save_csv()
+        rclpy.shutdown()
         sys.exit(0)
 
-    signal.signal(signal.SIGINT, sig_handler)
-    signal.signal(signal.SIGTERM, sig_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     try:
         rclpy.spin(node)
-    except BaseException:
-        pass
+    except KeyboardInterrupt:
+        node.save_csv()
     finally:
-        node.close_csv()
         if rclpy.ok():
             rclpy.shutdown()
 

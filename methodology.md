@@ -77,3 +77,26 @@ The `agriculture.world` environment serves as the project's standard benchmark t
 
 *Note: This is a forward-looking policy. Existing historical Phase 0 datasets and experiments recorded in other environments remain preserved as valid historical references.*
 
+---
+
+## Metric Tier & Confound Management Policy (Phase 1+)
+
+Beginning in Phase 1, evaluation metrics are governed by an explicit **two-tier hierarchy** to separate true tracking outcomes from internal pipeline precursors:
+
+1. **Tier 1 — Outcome Variables (VO Performance & Failure Definition)**:
+   - **Relative Pose Error (RPE)**: Translation ($e_{\text{RPE}, t}$) and rotation ($e_{\text{RPE}, R}$) step errors relative to aligned ground truth.
+   - **Absolute Trajectory Error (ATE)**: RMSE drift across full trajectory runs.
+   - **Pose Update Continuity**: Valid update flag ($\text{num\_inliers\_pose} \ge 8$), treated as a secondary Tier 1 outcome (pose availability).
+
+2. **Tier 2 — Candidate Precursor / Explanatory Variables (Predictors of Tier 1)**:
+   - Epipolar inlier ratio ($N_E / N_{\text{matched}}$) and pose agreement ratio ($N_{\text{pose}} / N_E$).
+   - Feature track survival ratio ($S_f$).
+   - Mean image-space feature velocity ($v_{\text{px}}$) and mean KLT tracking residual ($\bar{e}_{\text{lk}}$).
+   - Inter-frame physical translation baseline ($t_{\text{baseline}}$).
+
+3. **Covariates & Confound Management Policy**:
+   - **Experimental Control**: Scene heterogeneity is controlled experimentally by running all sweep profiles along standardized flight corridors in `agriculture.world`.
+   - **Covariate Adjustment**: Camera publication rate / timestamp delta ($\Delta t_{\text{frame}}$) and roll-induced translational displacement ($d_{\text{achieved}}$) are logged and adjusted for via statistical regression rather than treated as independent findings.
+   - **Diagnostic Sanity Checks**: Raw feature counts ($N_{\text{gftt}}$) serve strictly as per-run scene-density checks and are never used for cross-condition performance claims.
+
+

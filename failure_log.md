@@ -27,6 +27,19 @@
 | **15** | 2026-09-03 | Inlier Ratio vs Count Distinction | Apparent low inliers in bounded arena | **SUPERSEDED** — Metric conflation (`dt=50` rejection) |
 | **16** | 2026-09-03 | Sweep A: Pure Yaw Escalation | Yaw rate vs frame drop & inliers | **SUPERSEDED** — E-RANSAC healthy; $t=0$ depth filter artifact |
 | **17** | 2026-09-04 | Forensic Pipeline Repair & Phase 0E Finalization | Conflated metrics & `dt=50` rejection | **PASS / REPAIRED** — `num_inliers_E` decoupled; `dt=1000` adopted; validated in real 10° flight; Phase 0E complete |
+| **18** | 2026-09-05 | `recoverPose` Envelope Calibration | `dt=50` rejection under small baselines | **CALIBRATED** — `dt=1000` adopted for project envelope ($Z/t \le 1000$); project-specific calibration caveat preserved |
+| **19** | 2026-09-05 | GT Timestamp Provenance | GT wall-clock fallback (`time.time()`) | **RESOLVED** — Repaired to ROS sim time; historical GT aligned via relative time offset |
+| **20** | 2026-09-05 | GT Derivative Micro-Timing Spikes | $45\text{m/s}$ speed & $721^\circ/\text{s}$ yaw spikes | **RESOLVED** — Masked $dt < 2\text{ms}$ & unwrapped angles; removes timing artifacts, not real motion |
+| **21** | 2026-09-05 | Historical HOVER Active Window Bug | Mixed clocks produced $+1.289\text{s}$ offset | **CORRECTED** — Canonical sim-time window selection applied; historical baseline retained for provenance |
+| **22** | 2026-09-05 | HOVER Zero-Parallax Degeneracy | Low pose validity ($53\%$) in hover | **DIAGNOSTIC BASELINE** — Static hover lacks translation parallax; static baseline, not moving-flight Pose/E failure |
+| **23** | 2026-09-05 | P01/F1 Short-Duration Anomaly | P01 had only $3.29\text{s}$ active motion | **RESOLVED** — P01 marked historical duration anomaly; confirmation F1 R1–R3 (20s) provided full replacement |
+| **24** | 2026-09-05 | P03/P04 Attitude & Braking Excursions | Peak roll/pitch spikes ($19^\circ$) | **CAVEAT** — Excursions caused by terminal position-hold braking, not cruise severity; preserved as analysis caveat |
+| **25** | 2026-09-06 | Confirmation F9 R3 Execution Anomaly | F9 R3 hit 8s takeoff timeout ($1.70\text{m}$) | **EXECUTION ANOMALY** — Active motion never started; VO metrics must NOT be interpreted as F9 VO degradation |
+| **26** | 2026-09-06 | Confirmation F10 R1–R3 Execution Issue | F10 R1–R3 hit 8s takeoff timeout ($1.7\text{m}$) | **EXECUTION CAVEAT** — Intended L3 aggressive motion never executed; metrics reflect climb/hover, not L3 VO degradation |
+| **27** | 2026-09-06 | Sequential Multi-Run Degradation Audit | Tested chronological batch ($1 \to 21$) | **NO SEQUENTIAL DEGRADATION** — Bounded: No detectable sequential VO degradation under tested 21-run SITL conditions |
+| **28** | 2026-09-06 | Within-Run Temporal Degradation Audit | Tested active window quartiles ($Q1 \to Q4$) | **NO WITHIN-RUN DEGRADATION** — Inlier ratio stable ($\ge 99.5\%$) across quartiles; no temporal degradation in valid runs |
+| **29** | 2026-09-06 | Takeoff Timeout Action Item | 8s takeoff timeout too tight for SITL | **ACTION ITEM** — Forensic audit recommends `TAKEOFF_TIMEOUT_SEC` $8\text{s} \to 12\text{s}$ before Phase 2; documented |
+| **30** | 2026-09-06 | Phase 1 Programmatic Closure | Baseline characterization complete | **COMPLETE WITH DOCUMENTED CAVEATS** — Phase 1 closed; Phase 2 **READY** |
 
 ---
 
@@ -332,4 +345,108 @@
   - Real Flight Validation: `results/recoverpose_1000_10deg_agriculture_validation.md`
   - Phase 0E Summaries: `results/yaw_sweep_phase0e_v2_summary.md`, `results/tilt_sweep_phase0e_v3_summary.md`
 - **What I Learned**: In monocular visual odometry, metric depth filtering in non-metric unit-scale pose estimation can inadvertently truncate valid correspondences when physical translation baselines are small. Rigorous metric separation between algebraic epipolar RANSAC inliers (`num_inliers_E`) and pose-recovery cheirality inliers (`num_inliers_pose`) is essential to prevent false failure diagnoses.
+
+### Entry 18: 2026-09-05 — `recoverPose` Operating-Envelope Calibration & Scope Caveat
+- **Date**: 2026-09-05
+- **Problem / Goal**: Formalize operating-envelope calibration for OpenCV `cv2.recoverPose()` depth threshold (`distanceThresh`) and document epistemic scope boundaries.
+- **Hypothesis**: Default OpenCV `distanceThresh=50.0` rejected valid unit-scale triangulated points during small-baseline flight maneuvers ($Z_{\text{unit}} = Z_{\text{true}} / \|t\| > 50\text{m}$), whereas `distanceThresh=1000.0` accommodates unit-scale depths for project operating envelopes ($Z \le 10\text{m}$, baselines $t \ge 1\text{cm}$).
+- **What I Changed**: Adopted `distanceThresh=1000.0` in `src/minimal_vo.py` following 42-case synthetic matrix regression testing and real-flight $10^\circ$ roll validation in `agriculture.world`. Documented calibration scope in forensic audit.
+- **Result**: Restored 500/500 point acceptance in synthetic regressions and enabled $>90\%$ pose recovery in real flights.
+- **What I Learned**: `distanceThresh=1000.0` is an operating-envelope calibration specific to this project's unit-scale geometry ($Z/t \le 1000$), NOT a universal mathematical constant or general OpenCV patch.
+
+### Entry 19: 2026-09-05 — Ground-Truth Timestamp Provenance & Clock Disconnect Repair
+- **Date**: 2026-09-05
+- **Problem / Goal**: Resolve timestamp disconnect between ground-truth pose recording (`src/record_ground_truth.py`) and visual odometry (`src/minimal_vo.py`).
+- **Hypothesis**: Historical ground-truth logging fell back to system wall-clock Unix timestamps ($\sim 1.788 \times 10^9\text{ s}$) because Gazebo `TFMessage` header timestamps were zero ($0,0$), whereas VO logged Gazebo ROS simulation time ($t_{\text{sim}} \approx 6.6\text{s} - 45.5\text{s}$).
+- **What I Changed**: Repaired ground-truth subscriber node to enforce `use_sim_time: True` and explicitly subscribe to ROS `/clock` simulation time headers.
+- **Result**: Synchronized future telemetry streams directly to simulation time.
+- **What I Learned**: Historical dataset GT logs must be aligned using relative elapsed time ($\Delta t$) from takeoff completion rather than direct absolute timestamp equality. Historical data should NOT be silently treated as directly timestamp-synchronized with VO.
+
+### Entry 20: 2026-09-05 — Ground-Truth Micro-Timing Jitter & Derivative Filtering
+- **Date**: 2026-09-05
+- **Problem / Goal**: Eliminate artificial kinetic derivative spikes ($45.01\text{ m/s}$ speed, $721.3^\circ/\text{s}$ yaw rate in $P07$) in ground-truth analysis scripts (`src/analyze_phase1_gt.py`).
+- **Hypothesis**: Thread dispatch jitter in Gazebo TF bridging produced clustered micro-interval sample pairs ($dt < 2.0\text{ ms}$, up to $15.5\%$ of samples) and raw angle wraparound ($-\pi \to +\pi$), causing finite difference division artifacts.
+- **What I Changed**: Updated canonical analysis pipeline to filter out sample intervals with $dt < 2.0\text{ ms}$ and unwrap angular orientation series before computing spatial derivatives ($\mathbf{v}, \boldsymbol{\omega}$).
+- **Result**: Artificial velocity and yaw-rate spikes were fully eliminated (clean P95 speed $2.28\text{ m/s}$, clean P95 yaw rate $140.2^\circ/\text{s}$ in $P07$).
+- **What I Learned**: Derivative masking of micro-timing noise ($dt < 2.0\text{ ms}$) removes numerical and timing artifacts created by thread dispatch jitter, NOT genuine high-speed physical motion.
+
+### Entry 21: 2026-09-05 — Historical HOVER Baseline Active-Window Alignment Bug
+- **Date**: 2026-09-05
+- **Problem / Goal**: Audit active window selection in historical HOVER baseline analysis.
+- **Hypothesis**: The historical baseline script mixed GT-relative wall-clock time and VO-relative simulation time, shifting the evaluated active motion window by approximately $+1.289\text{ s}$.
+- **What I Changed**: Corrected canonical active window selection logic in `src/analyze_phase1_gt.py` to use unified simulation timestamps for both GT and VO telemetry.
+- **Result**: Active window selection brought into strict temporal alignment.
+- **What I Learned**: Historical baseline reports must be retained as historical provenance for auditability rather than silently overwritten; canonical analysis explicitly documents the correction.
+
+### Entry 22: 2026-09-05 — HOVER Zero-Parallax Degeneracy Diagnostic Classification
+- **Date**: 2026-09-05
+- **Problem / Goal**: Diagnose low valid pose update rates ($52.45\% - 53.81\%$) during stationary HOVER ($L0$) runs despite high Essential Matrix RANSAC inlier ratios ($99.9\%$).
+- **Hypothesis**: Stationary hovering exhibits near-zero translation ($v \approx 0.05\text{ m/s}$), creating insufficient baseline parallax for 5-point Essential Matrix triangulation.
+- **What I Changed**: Conducted diagnostic breakdown across HOVER runs $R1 - R3$. Evaluated feature tracking survival ($72.87\% - 75.71\%$) vs pose valid rates.
+- **Result**: Confirmed that near-zero translation baseline causes parallel epipolar ray degeneracy, triggering cheirality/depth filtering rejection in `recoverPose()` while epipolar feature matching remains healthy.
+- **What I Learned**: HOVER $L0$ is a static/zero-parallax diagnostic baseline, NOT a direct moving-flight Pose/E health threshold. Pose/E metrics during pure hover reflect geometric baseline limits rather than VO algorithm degradation.
+
+### Entry 23: 2026-09-05 — P01/F1 Forward Translation Short-Duration Anomaly & Resolution
+- **Date**: 2026-09-05
+- **Problem / Goal**: Address duration imbalance in pilot trajectory $P01$ ($F1$ Forward Translation $L2$).
+- **Hypothesis**: $P01$ completed its forward translation target ($14.0\text{m}$) rapidly, yielding only $3.29\text{ s}$ of canonical cruise motion (100 VO frames) compared to $22.4 - 24.2\text{ s}$ ($679 - 732$ VO frames) for pilots $P02 - P08$.
+- **What I Changed**: Audit flagged $P01$ as a historical duration anomaly. Confirmation batch executed 20.0s replacement runs ($F1$ $R1 - R3$, $749 - 754$ frames).
+- **Result**: Replicate runs $F1$ $R1 - R3$ provided full-duration, time-normalized baseline comparisons ($80.54\% - 82.69\%$ valid pose rate).
+- **What I Learned**: Original $P01$ must be documented as a historical duration anomaly; full-duration confirmation runs resolved the cross-pilot comparability issue.
+
+### Entry 24: 2026-09-05 — P03/P04 Attitude Excursion & Braking Trajectory Interpretation
+- **Date**: 2026-09-05
+- **Problem / Goal**: Interpret peak attitude excursions ($19.4^\circ$ roll in $P03$, $18.8^\circ$ pitch in $P04$) observed in Phase 1 pilot telemetry.
+- **Hypothesis**: High peak attitude values reflected hard position-hold braking at active trajectory termination rather than steady-state cruise severity.
+- **What I Changed**: Analyzed time-series attitude profiles and body/ENU frame transformations across active motion windows.
+- **Result**: Confirmed cruise-phase roll/pitch remained moderate ($4.2^\circ - 6.8^\circ$ P95), with peak excursions isolated strictly to terminal braking maneuvers.
+- **What I Learned**: Terminal position-hold braking causes transient attitude spikes; evaluation must distinguish terminal braking artifacts from steady-state motion severity as an analysis caveat, NOT a VO degradation failure.
+
+### Entry 25: 2026-09-06 — Confirmation F9 R3 Takeoff Timeout Execution Anomaly
+- **Date**: 2026-09-06
+- **Problem / Goal**: Investigate execution anomaly in confirmation run 18 (`confirmation_018_F9_L2_R3`).
+- **Hypothesis**: F9 R3 hit the 8.0s takeoff timeout prior to reaching the $2.0\text{m}$ altitude threshold due to SITL climb rate fluctuation, triggering an early fallback return.
+- **What I Changed**: Audited execution log `results/confirmation_018_F9_L2_R3_exec.log`. Confirmed active trajectory motion was never initialized ($N_{\text{VO}} = 295$ vs $626-627$ in R1/R2).
+- **Result**: Identified F9 R3 as an execution timeout anomaly rather than an algorithmic VO failure.
+- **What I Learned**: F9 R3 VO metrics MUST NOT be interpreted as F9 VO degradation; the run is classified strictly as an execution anomaly.
+
+### Entry 26: 2026-09-06 — Confirmation F10 R1–R3 Takeoff Execution Incomplete Caveat
+- **Date**: 2026-09-06
+- **Problem / Goal**: Audit performance of confirmation runs 19–21 (`confirmation_019_F10_L3_R1` to `confirmation_021_F10_L3_R3`).
+- **Hypothesis**: All three F10 runs hit the 8.0s takeoff timeout at altitude $Z \approx 1.65 - 1.72\text{m}$, failing to reach the $2.0\text{m}$ threshold required to start Level-3 aggressive coupled active motion setpoints.
+- **What I Changed**: Examined execution logs (`confirmation_019-021_F10_L3_exec.log`). Verified vehicle remained in hover/climb fallback throughout the active window.
+- **Result**: Confirmed intended aggressive Level-3 motion profile was never executed by PX4 SITL.
+- **What I Learned**: F10 R1–R3 VO metrics do NOT characterize the intended F10 aggressive trajectory and must be classified as lower-achieved-severity / execution caveats rather than VO degradation results.
+
+### Entry 27: 2026-09-06 — 21-Run Sequential Batch Degradation Audit Finding
+- **Date**: 2026-09-06
+- **Problem / Goal**: Evaluate whether monocular VO systematically degrades over consecutive chronologically executed flight runs ($1 \to 21$).
+- **Hypothesis**: Cumulative software state, memory leaks, or simulator timing drift might cause progressive VO performance loss over sequential batch execution.
+- **What I Changed**: Analyzed chronological sequence metrics across 21 consecutive SITL runs. Evaluated replicate consistency ($R1 \to R2 \to R3$) across identical trajectory families.
+- **Result**: Replicate runs demonstrated high consistency ($\Delta\text{E-Ratio} < 0.001$, $\Delta\text{Valid Pose Rate} < 1.8\%$). VO metrics clustered by motion family rather than chronological batch index.
+- **What I Learned**: Bounded Finding: "Under the tested 21-run SITL/Gazebo sequence and conditions, no detectable sequential VO degradation was observed." This does NOT constitute proof that cumulative/thermal/hardware degradation is impossible in physical real-world systems.
+
+### Entry 28: 2026-09-06 — Within-Run Temporal Stability Audit Finding
+- **Date**: 2026-09-06
+- **Problem / Goal**: Evaluate whether VO performance degrades intra-run across active window duration.
+- **Hypothesis**: Feature drift or frame-to-frame error accumulation during a 20-second flight profile could cause within-run temporal degradation.
+- **What I Changed**: Divided active motion windows into four equal temporal quartiles ($Q1: 0-25\%$, $Q2: 25-50\%$, $Q3: 50-75\%$, $Q4: 75-100\%$) across all 21 confirmation runs.
+- **Result**: Essential Matrix inlier ratios remained stable at $\ge 99.5\%$ across all quartiles in translational runs; feature tracking reached steady-state equilibrium.
+- **What I Learned**: No detectable within-run temporal degradation occurred in valid test trajectories under the evaluated simulation conditions.
+
+### Entry 29: 2026-09-06 — Operational Infrastructure Action Item: Takeoff Readiness Timeout Adjustment
+- **Date**: 2026-09-06
+- **Problem / Goal**: Address execution timeouts observed in F9 R3 and F10 R1–R3 where SITL climb variability caused valid runs to hit the 8.0s takeoff threshold cap.
+- **Hypothesis**: The closed-loop altitude takeoff state machine concept is sound, but the 8.0s timeout (`TAKEOFF_TIMEOUT_SEC`) is overly restrictive for observed SITL initialization variability.
+- **What I Changed**: Recorded formal forensic audit recommendation to increase `TAKEOFF_TIMEOUT_SEC` from 8.0s to 12.0s prior to Phase 2 execution.
+- **Result**: Documented as an infrastructure configuration action item. No code changes or reruns were executed at this time.
+- **What I Learned**: Simulation environment initialization jitter requires conservative state-machine timeout margins ($\ge 12.0\text{ s}$) to prevent premature fallback aborts.
+
+### Entry 30: 2026-09-06 — Phase 1 Programmatic Closure & Phase 2 Transition Readiness
+- **Date**: 2026-09-06
+- **Problem / Goal**: Finalize Phase 1 experimental closure and declare Phase 2 readiness.
+- **Hypothesis**: Baseline characterization across 8 pilot trajectories ($P01-P08$) and 21 confirmation runs provides a complete, trustworthy foundation for Phase 2 fault injection.
+- **What I Changed**: Consolidated findings from Phase 1 Pilot Audit (`results/phase1_pilot_audit.md`) and Confirmation Batch Report (`results/phase1_confirmation_batch_report.md`).
+- **Result**: Formally closed Phase 1 with documented caveats and declared Phase 2 readiness.
+- **What I Learned**: Final Phase 1 Status: **COMPLETE WITH DOCUMENTED CAVEATS**. Phase 2 Status: **READY**.
 

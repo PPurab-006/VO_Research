@@ -1,0 +1,1204 @@
+[INFO] [1788625169.255746042] [live_ground_truth_recorder]: Subscribing to LIVE ground-truth pose topic: '/world/default/dynamic_pose/info'
+[INFO] [1788625169.255981151] [live_ground_truth_recorder]: Target model: 'x500_mono_cam_0' | Max samples: 3000
+[INFO] [1788625169.256173270] [live_ground_truth_recorder]: Saving output to: '/home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_gt.csv'
+[INFO] [1788625169.256341622] [live_ground_truth_recorder]: Timestamp Domain: Enforced ROS simulation time (use_sim_time=True via /clock)
+[INFO] [1788625169.409752333] [live_ground_truth_recorder]: [1] LIVE GT Stamp (Sim): 5.392 s | Pos: (14.0294, -7.5605, -0.1068) m | Quat(xyzw): (0.0140, -0.0082, -0.0094, 0.9998)
+[INFO] [1788625171.047791450] [minimal_vo]: Minimal VO Node Initialized in 'KLT' mode on topic '/world/default/model/x500_mono_cam_0/link/camera_link/sensor/camera/image'
+[INFO] [1788625171.048832780] [minimal_vo]: Intrinsics K:
+[[539.9363327    0.         640.        ]
+ [  0.         539.93637085 480.        ]
+ [  0.           0.           1.        ]]
+[INFO] [1788625171.049418638] [minimal_vo]: Output directory: '/home/purab/Purab/Projects/ROS/results'
+[INFO] [1788625171.050210294] [live_ground_truth_recorder]: [100] LIVE GT Stamp (Sim): 6.984 s | Pos: (14.0294, -7.5605, -0.1068) m | Quat(xyzw): (0.0140, -0.0082, -0.0094, 0.9998)
+[WARN] [1788625171.120824156] [minimal_vo]: [WINDOW FAILURE TRIGGERED] Frame #0: 100.0% low-inlier frames in 2.0s window!
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 1 (Achieved FPS: 0.00 Hz over 0.00s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 963.0, Min = 963, Max = 963
+  Matched Features/Frame  : Mean = 0.0, Min = 0, Max = 0
+  Essential Inliers (E)   : Mean = 0.0, Min = 0, Max = 0
+  Pose Inliers (recover)  : Mean = 0.0, Min = 0, Max = 0
+  Homography Inliers/Frame: Mean = 0.0, Min = 0, Max = 0
+  Inlier Ratio            : Mean = 0.00%, Min = 0.00%, Max = 0.00%
+  Feature Survival Rate   : Mean = 0.00%, Min = 0.00%, Max = 0.00%
+  Feature Velocity (Mean) : Mean = 0.00 px/fr, Max = 0.00 px/fr
+  LK Tracking Error (Mean): Mean = 0.0000 px, Max = 0.0000 px
+======================================================================
+
+[INFO] [1788625171.122212524] [minimal_vo]: [0] Pos: (0.00, 0.00, 0.00) | Matched: 0, InliersE: 0, InliersPose: 0, InliersH: 0 | LKErr: 0.00px
+==========================================================================
+PHASE 1 MOTION GENERATOR — Family: F9, Severity: L2
+==========================================================================
+Local Origin (0,0)  : PX4 EKF Spawn (Gazebo X: 14.0505m, Y: -7.5229m)
+Frame Mapping       : PX4 +Y_NED -> Gazebo +X (Longitudinal), PX4 +X_NED -> Gazebo +Y (Lateral)
+Cruise Altitude Z   : 2.41 m ENU (-2.41 m NED)
+Planned Duration    : 20.0 s after TAKEOFF_READY
+Local Geofence Bounds: Local X[-5.48,2.52] Local Y[-6.05,17.95] Alt Z[1.0,4.5]
+--------------------------------------------------------------------------
+Connecting to PX4 via MAVLink at udpin:0.0.0.0:14540...
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 26 (Achieved FPS: 31.52 Hz over 0.83s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 963.0, Min = 963, Max = 963
+  Matched Features/Frame  : Mean = 926.0, Min = 0, Max = 963
+  Essential Inliers (E)   : Mean = 926.0, Min = 0, Max = 963
+  Pose Inliers (recover)  : Mean = 0.0, Min = 0, Max = 0
+  Homography Inliers/Frame: Mean = 926.0, Min = 0, Max = 963
+  Inlier Ratio            : Mean = 96.15%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 96.15%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 0.00 px/fr, Max = 0.00 px/fr
+  LK Tracking Error (Mean): Mean = 0.0000 px, Max = 0.0000 px
+======================================================================
+
+[INFO] [1788625172.036214166] [minimal_vo]: [25] Pos: (0.00, 0.00, 0.00) | Matched: 963, InliersE: 963, InliersPose: 0, InliersH: 963 | LKErr: 0.00px
+Heartbeat received! (SysID: 1, CompID: 0)
+[1/4] Pre-streaming OFFBOARD hover setpoints (Local 0, 0, 2.41m) for 1.5s...
+[INFO] [1788625172.782332670] [live_ground_truth_recorder]: [200] LIVE GT Stamp (Sim): 8.583 s | Pos: (14.0294, -7.5605, -0.1068) m | Quat(xyzw): (0.0140, -0.0082, -0.0094, 0.9998)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 51 (Achieved FPS: 30.91 Hz over 1.65s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 963.0, Min = 963, Max = 963
+  Matched Features/Frame  : Mean = 944.1, Min = 0, Max = 963
+  Essential Inliers (E)   : Mean = 944.1, Min = 0, Max = 963
+  Pose Inliers (recover)  : Mean = 0.0, Min = 0, Max = 0
+  Homography Inliers/Frame: Mean = 944.1, Min = 0, Max = 963
+  Inlier Ratio            : Mean = 98.04%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 98.04%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 0.00 px/fr, Max = 0.00 px/fr
+  LK Tracking Error (Mean): Mean = 0.0000 px, Max = 0.0000 px
+======================================================================
+
+[INFO] [1788625172.898005719] [minimal_vo]: [50] Pos: (0.00, 0.00, 0.00) | Matched: 963, InliersE: 963, InliersPose: 0, InliersH: 963 | LKErr: 0.00px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 76 (Achieved FPS: 30.71 Hz over 2.47s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 963.0, Min = 963, Max = 963
+  Matched Features/Frame  : Mean = 950.3, Min = 0, Max = 963
+  Essential Inliers (E)   : Mean = 950.3, Min = 0, Max = 963
+  Pose Inliers (recover)  : Mean = 0.0, Min = 0, Max = 0
+  Homography Inliers/Frame: Mean = 950.3, Min = 0, Max = 963
+  Inlier Ratio            : Mean = 98.68%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 98.68%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 0.00 px/fr, Max = 0.00 px/fr
+  LK Tracking Error (Mean): Mean = 0.0000 px, Max = 0.0000 px
+======================================================================
+
+[INFO] [1788625173.738825947] [minimal_vo]: [75] Pos: (0.00, 0.00, 0.00) | Matched: 963, InliersE: 963, InliersPose: 0, InliersH: 963 | LKErr: 0.00px
+[2/4] Arming vehicle...
+[3/4] Requesting OFFBOARD mode...
+[INFO] [1788625174.500356730] [live_ground_truth_recorder]: [300] LIVE GT Stamp (Sim): 10.231 s | Pos: (14.0294, -7.5605, -0.1068) m | Quat(xyzw): (0.0140, -0.0082, -0.0094, 0.9998)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 101 (Achieved FPS: 30.61 Hz over 3.30s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 962.1, Min = 950, Max = 963
+  Matched Features/Frame  : Mean = 952.4, Min = 0, Max = 963
+  Essential Inliers (E)   : Mean = 952.4, Min = 0, Max = 963
+  Pose Inliers (recover)  : Mean = 0.0, Min = 0, Max = 0
+  Homography Inliers/Frame: Mean = 952.4, Min = 0, Max = 963
+  Inlier Ratio            : Mean = 99.01%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 99.00%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 0.00 px/fr, Max = 0.00 px/fr
+  LK Tracking Error (Mean): Mean = 0.0000 px, Max = 0.0000 px
+======================================================================
+
+[INFO] [1788625174.622419948] [minimal_vo]: [100] Pos: (0.00, 0.00, 0.00) | Matched: 950, InliersE: 950, InliersPose: 0, InliersH: 950 | LKErr: 0.00px
+[EVENT: TAKEOFF_START] Climbing to cruise altitude (2.41m ENU)...
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 126 (Achieved FPS: 30.55 Hz over 4.12s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 959.7, Min = 950, Max = 963
+  Matched Features/Frame  : Mean = 951.9, Min = 0, Max = 963
+  Essential Inliers (E)   : Mean = 951.9, Min = 0, Max = 963
+  Pose Inliers (recover)  : Mean = 0.0, Min = 0, Max = 0
+  Homography Inliers/Frame: Mean = 951.9, Min = 0, Max = 963
+  Inlier Ratio            : Mean = 99.21%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 99.20%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 0.00 px/fr, Max = 0.00 px/fr
+  LK Tracking Error (Mean): Mean = 0.0000 px, Max = 0.0000 px
+======================================================================
+
+[INFO] [1788625175.499150005] [minimal_vo]: [125] Pos: (0.00, 0.00, 0.00) | Matched: 950, InliersE: 950, InliersPose: 0, InliersH: 950 | LKErr: 0.00px
+[INFO] [1788625176.221279762] [live_ground_truth_recorder]: [400] LIVE GT Stamp (Sim): 11.873 s | Pos: (14.0294, -7.5605, -0.1068) m | Quat(xyzw): (0.0140, -0.0082, -0.0094, 0.9998)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 151 (Achieved FPS: 30.51 Hz over 4.95s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 958.1, Min = 950, Max = 963
+  Matched Features/Frame  : Mean = 951.6, Min = 0, Max = 963
+  Essential Inliers (E)   : Mean = 951.6, Min = 0, Max = 963
+  Pose Inliers (recover)  : Mean = 0.0, Min = 0, Max = 0
+  Homography Inliers/Frame: Mean = 951.6, Min = 0, Max = 963
+  Inlier Ratio            : Mean = 99.34%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 99.33%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 0.00 px/fr, Max = 0.00 px/fr
+  LK Tracking Error (Mean): Mean = 0.0000 px, Max = 0.0001 px
+======================================================================
+
+[INFO] [1788625176.357265813] [minimal_vo]: [150] Pos: (0.00, 0.00, 0.00) | Matched: 950, InliersE: 950, InliersPose: 0, InliersH: 950 | LKErr: 0.00px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 176 (Achieved FPS: 30.48 Hz over 5.78s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 956.8, Min = 949, Max = 963
+  Matched Features/Frame  : Mean = 951.3, Min = 0, Max = 963
+  Essential Inliers (E)   : Mean = 951.3, Min = 0, Max = 963
+  Pose Inliers (recover)  : Mean = 0.0, Min = 0, Max = 0
+  Homography Inliers/Frame: Mean = 951.3, Min = 0, Max = 963
+  Inlier Ratio            : Mean = 99.43%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 99.42%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 0.00 px/fr, Max = 0.00 px/fr
+  LK Tracking Error (Mean): Mean = 0.0000 px, Max = 0.0001 px
+======================================================================
+
+[INFO] [1788625177.206853672] [minimal_vo]: [175] Pos: (0.00, 0.00, 0.00) | Matched: 949, InliersE: 949, InliersPose: 0, InliersH: 949 | LKErr: 0.00px
+[INFO] [1788625177.936644685] [live_ground_truth_recorder]: [500] LIVE GT Stamp (Sim): 13.526 s | Pos: (14.0463, -7.5614, 0.1743) m | Quat(xyzw): (-0.0093, 0.0051, -0.0114, 0.9999)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 201 (Achieved FPS: 30.45 Hz over 6.60s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 936.3, Min = 126, Max = 1470
+  Matched Features/Frame  : Mean = 912.8, Min = 0, Max = 1470
+  Essential Inliers (E)   : Mean = 911.1, Min = 0, Max = 1324
+  Pose Inliers (recover)  : Mean = 47.2, Min = 0, Max = 1324
+  Homography Inliers/Frame: Mean = 907.6, Min = 0, Max = 1170
+  Inlier Ratio            : Mean = 97.86%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 97.96%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 0.87 px/fr, Max = 20.14 px/fr
+  LK Tracking Error (Mean): Mean = 0.2138 px, Max = 3.4810 px
+======================================================================
+
+[INFO] [1788625178.049831828] [minimal_vo]: [200] Pos: (2.92, -0.85, 12.00) | Matched: 628, InliersE: 620, InliersPose: 620, InliersH: 627 | LKErr: 1.76px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 226 (Achieved FPS: 30.44 Hz over 7.43s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 885.0, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 853.7, Min = 0, Max = 1970
+  Essential Inliers (E)   : Mean = 851.4, Min = 0, Max = 1951
+  Pose Inliers (recover)  : Mean = 81.9, Min = 0, Max = 1729
+  Homography Inliers/Frame: Mean = 847.6, Min = 0, Max = 1925
+  Inlier Ratio            : Mean = 97.42%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 97.21%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 2.27 px/fr, Max = 20.61 px/fr
+  LK Tracking Error (Mean): Mean = 0.3275 px, Max = 3.4810 px
+======================================================================
+
+[INFO] [1788625178.899449842] [minimal_vo]: [225] Pos: (5.94, 1.85, 33.83) | Matched: 1970, InliersE: 1951, InliersPose: 1729, InliersH: 1925 | LKErr: 2.28px
+[INFO] [1788625179.659921029] [live_ground_truth_recorder]: [600] LIVE GT Stamp (Sim): 15.188 s | Pos: (14.0313, -7.4882, 1.4705) m | Quat(xyzw): (0.0030, 0.0019, -0.0092, 1.0000)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 251 (Achieved FPS: 30.42 Hz over 8.25s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 922.1, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 893.6, Min = 0, Max = 1970
+  Essential Inliers (E)   : Mean = 891.4, Min = 0, Max = 1951
+  Pose Inliers (recover)  : Mean = 193.3, Min = 0, Max = 1729
+  Homography Inliers/Frame: Mean = 887.8, Min = 0, Max = 1925
+  Inlier Ratio            : Mean = 97.67%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 97.47%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 2.27 px/fr, Max = 20.61 px/fr
+  LK Tracking Error (Mean): Mean = 0.3793 px, Max = 3.4810 px
+======================================================================
+
+[INFO] [1788625179.772461153] [minimal_vo]: [250] Pos: (4.55, 3.68, 56.25) | Matched: 312, InliersE: 312, InliersPose: 312, InliersH: 312 | LKErr: 0.84px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 276 (Achieved FPS: 30.41 Hz over 9.07s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 899.9, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 859.3, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 857.3, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 209.1, Min = 0, Max = 1729
+  Homography Inliers/Frame: Mean = 853.9, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 97.15%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 96.95%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 2.20 px/fr, Max = 20.61 px/fr
+  LK Tracking Error (Mean): Mean = 0.4327 px, Max = 3.4810 px
+======================================================================
+
+[INFO] [1788625180.613147164] [minimal_vo]: [275] Pos: (4.30, 5.65, 65.99) | Matched: 413, InliersE: 412, InliersPose: 412, InliersH: 412 | LKErr: 0.93px
+[INFO] [1788625181.380570048] [live_ground_truth_recorder]: [700] LIVE GT Stamp (Sim): 16.852 s | Pos: (13.9945, -7.5759, 1.9358) m | Quat(xyzw): (-0.0010, 0.0013, -0.0083, 1.0000)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 301 (Achieved FPS: 30.40 Hz over 9.90s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 906.9, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 855.9, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 853.7, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 247.2, Min = 0, Max = 1729
+  Homography Inliers/Frame: Mean = 850.6, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 96.70%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 96.48%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 2.16 px/fr, Max = 20.61 px/fr
+  LK Tracking Error (Mean): Mean = 0.4798 px, Max = 3.4810 px
+======================================================================
+
+[INFO] [1788625181.464630556] [minimal_vo]: [300] Pos: (3.66, 0.53, 72.48) | Matched: 508, InliersE: 507, InliersPose: 374, InliersH: 507 | LKErr: 1.01px
+[EVENT: TAKEOFF_ALTITUDE_UPDATE] Altitude threshold reached (2.01m >= 2.0m). Starting 0.5s stability timer...
+[EVENT: TAKEOFF_READY] Cruise altitude stable for 0.5s! Total Takeoff Time: 7.29s | Pose: Local X=-0.01m, Local Y=-0.03m, Alt=2.09m
+
+[EVENT: MOTION_START] Starting motion profile 'F9' (Severity L2) for 20.0s after TAKEOFF_READY...
+
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 326 (Achieved FPS: 30.40 Hz over 10.73s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 901.0, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 835.2, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 833.2, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 255.6, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 830.1, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 96.03%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.81%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 2.13 px/fr, Max = 20.61 px/fr
+  LK Tracking Error (Mean): Mean = 0.5530 px, Max = 4.4910 px
+======================================================================
+
+[INFO] [1788625182.341750683] [minimal_vo]: [325] Pos: (6.97, 2.47, 67.45) | Matched: 510, InliersE: 509, InliersPose: 473, InliersH: 472 | LKErr: 4.49px
+[INFO] [1788625183.090663335] [live_ground_truth_recorder]: [800] LIVE GT Stamp (Sim): 18.499 s | Pos: (14.0887, -7.5615, 2.1211) m | Quat(xyzw): (0.0469, 0.0337, 0.5514, 0.8323)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 351 (Achieved FPS: 30.39 Hz over 11.55s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 884.3, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 810.7, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 805.6, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 263.1, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 801.6, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.41%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.39%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 4.28 px/fr, Max = 44.28 px/fr
+  LK Tracking Error (Mean): Mean = 0.7114 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625183.214883620] [minimal_vo]: [350] Pos: (11.09, 2.65, 62.87) | Matched: 1938, InliersE: 1840, InliersPose: 682, InliersH: 1737 | LKErr: 4.54px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 376 (Achieved FPS: 30.38 Hz over 12.38s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 867.7, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 793.5, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 788.4, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 278.6, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 784.6, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.42%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.41%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 4.73 px/fr, Max = 44.28 px/fr
+  LK Tracking Error (Mean): Mean = 0.7350 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625184.050665886] [minimal_vo]: [375] Pos: (9.56, -6.34, 58.71) | Matched: 1129, InliersE: 1128, InliersPose: 1128, InliersH: 1129 | LKErr: 0.92px
+[INFO] [1788625184.807080613] [live_ground_truth_recorder]: [900] LIVE GT Stamp (Sim): 20.129 s | Pos: (15.3792, -7.6414, 2.2169) m | Quat(xyzw): (0.0166, 0.0188, 0.7318, 0.6810)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 401 (Achieved FPS: 30.38 Hz over 13.20s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 869.2, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 793.6, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 788.1, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 304.5, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 784.2, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.38%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.23%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 5.71 px/fr, Max = 44.28 px/fr
+  LK Tracking Error (Mean): Mean = 0.7816 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625184.918827747] [minimal_vo]: [400] Pos: (5.76, -10.32, 46.39) | Matched: 109, InliersE: 108, InliersPose: 108, InliersH: 107 | LKErr: 1.90px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 426 (Achieved FPS: 30.37 Hz over 14.02s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 882.4, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 806.4, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 800.9, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 343.0, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 795.1, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.38%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.25%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 5.93 px/fr, Max = 44.28 px/fr
+  LK Tracking Error (Mean): Mean = 0.8248 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625185.867160025] [minimal_vo]: [425] Pos: (-4.92, 1.70, 47.80) | Matched: 824, InliersE: 822, InliersPose: 689, InliersH: 796 | LKErr: 1.41px
+[INFO] [1788625186.528640159] [live_ground_truth_recorder]: [1000] LIVE GT Stamp (Sim): 21.723 s | Pos: (17.1966, -7.5171, 2.2395) m | Quat(xyzw): (0.0008, -0.0026, 0.6755, 0.7373)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 451 (Achieved FPS: 30.37 Hz over 14.85s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 868.1, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 791.5, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 785.4, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 349.4, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 779.1, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.36%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.23%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 6.94 px/fr, Max = 46.13 px/fr
+  LK Tracking Error (Mean): Mean = 0.8746 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625186.707124454] [minimal_vo]: [450] Pos: (-18.48, 6.45, 52.99) | Matched: 565, InliersE: 563, InliersPose: 488, InliersH: 560 | LKErr: 1.21px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 476 (Achieved FPS: 30.37 Hz over 15.68s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 859.6, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 782.2, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 776.2, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 359.3, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 769.9, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.37%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.21%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 7.43 px/fr, Max = 46.13 px/fr
+  LK Tracking Error (Mean): Mean = 0.8865 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625187.586859640] [minimal_vo]: [475] Pos: (-14.94, -1.52, 46.00) | Matched: 203, InliersE: 203, InliersPose: 203, InliersH: 203 | LKErr: 0.98px
+[INFO] [1788625188.243945251] [live_ground_truth_recorder]: [1100] LIVE GT Stamp (Sim): 23.360 s | Pos: (18.9183, -7.4876, 2.2899) m | Quat(xyzw): (0.0080, 0.0057, 0.5568, 0.8306)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 501 (Achieved FPS: 30.36 Hz over 16.50s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 845.7, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 767.9, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 761.8, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 365.0, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 755.6, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.38%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.17%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 7.51 px/fr, Max = 46.13 px/fr
+  LK Tracking Error (Mean): Mean = 0.8975 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625188.448486055] [minimal_vo]: [500] Pos: (-11.80, -5.68, 32.60) | Matched: 1426, InliersE: 1421, InliersPose: 1421, InliersH: 1421 | LKErr: 1.29px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 526 (Achieved FPS: 30.36 Hz over 17.32s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 827.3, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 752.6, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 746.7, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 367.0, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 740.7, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.58%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.23%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 7.86 px/fr, Max = 46.13 px/fr
+  LK Tracking Error (Mean): Mean = 0.9113 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625189.289587473] [minimal_vo]: [525] Pos: (-20.18, -6.05, 17.94) | Matched: 99, InliersE: 99, InliersPose: 99, InliersH: 99 | LKErr: 0.85px
+[INFO] [1788625189.965063079] [live_ground_truth_recorder]: [1200] LIVE GT Stamp (Sim): 25.003 s | Pos: (20.7223, -7.5000, 2.3031) m | Quat(xyzw): (0.0017, 0.0024, 0.8265, 0.5629)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 551 (Achieved FPS: 30.36 Hz over 18.15s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 837.4, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 762.0, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 756.2, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 391.4, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 749.9, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.58%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.21%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 7.99 px/fr, Max = 46.13 px/fr
+  LK Tracking Error (Mean): Mean = 0.9282 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625190.192127310] [minimal_vo]: [550] Pos: (-37.52, 1.90, 24.88) | Matched: 460, InliersE: 459, InliersPose: 422, InliersH: 444 | LKErr: 1.39px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 576 (Achieved FPS: 30.36 Hz over 18.98s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 837.6, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 760.8, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 754.7, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 404.1, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 748.2, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.53%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.06%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 8.90 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 0.9594 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625191.070644573] [minimal_vo]: [575] Pos: (-53.46, -2.64, 18.94) | Matched: 736, InliersE: 729, InliersPose: 341, InliersH: 727 | LKErr: 1.39px
+[INFO] [1788625191.678505800] [live_ground_truth_recorder]: [1300] LIVE GT Stamp (Sim): 26.636 s | Pos: (22.3778, -7.5060, 2.3270) m | Quat(xyzw): (0.0044, 0.0068, 0.4178, 0.9085)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 601 (Achieved FPS: 30.35 Hz over 19.80s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 835.6, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 758.4, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 752.2, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 413.7, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 745.9, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.52%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.04%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 9.03 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 0.9698 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625191.890161355] [minimal_vo]: [600] Pos: (-49.11, -7.47, 11.83) | Matched: 422, InliersE: 422, InliersPose: 422, InliersH: 422 | LKErr: 1.24px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 626 (Achieved FPS: 30.35 Hz over 20.62s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 836.5, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 758.5, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 752.1, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 425.6, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 745.0, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.50%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 94.92%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 9.35 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.0034 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625192.757720004] [minimal_vo]: [625] Pos: (-46.30, -11.98, -4.99) | Matched: 640, InliersE: 637, InliersPose: 637, InliersH: 637 | LKErr: 1.32px
+[INFO] [1788625193.396965886] [live_ground_truth_recorder]: [1400] LIVE GT Stamp (Sim): 28.285 s | Pos: (24.0913, -7.6046, 2.3452) m | Quat(xyzw): (0.0057, 0.0098, 0.8534, 0.5211)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 651 (Achieved FPS: 30.35 Hz over 21.45s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 837.9, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 759.4, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 753.0, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 438.2, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 746.1, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.50%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 94.88%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 9.42 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.0115 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625193.642074843] [minimal_vo]: [650] Pos: (-53.52, -5.30, -11.97) | Matched: 1642, InliersE: 1642, InliersPose: 1642, InliersH: 1640 | LKErr: 1.01px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 676 (Achieved FPS: 30.35 Hz over 22.27s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 855.0, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 778.9, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 772.5, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 468.6, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 765.7, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.64%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.02%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 9.76 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.0176 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625194.509518639] [minimal_vo]: [675] Pos: (-72.79, 0.78, -16.26) | Matched: 665, InliersE: 652, InliersPose: 650, InliersH: 650 | LKErr: 1.56px
+[INFO] [1788625195.113063097] [live_ground_truth_recorder]: [1500] LIVE GT Stamp (Sim): 29.913 s | Pos: (25.8427, -7.5894, 2.3464) m | Quat(xyzw): (0.0007, 0.0004, 0.4751, 0.8799)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 701 (Achieved FPS: 30.35 Hz over 23.10s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 846.1, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 769.4, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 762.7, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 467.4, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 755.8, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.59%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 94.97%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 10.22 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.0326 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625195.343724529] [minimal_vo]: [700] Pos: (-71.32, 2.99, -26.45) | Matched: 266, InliersE: 266, InliersPose: 266, InliersH: 266 | LKErr: 0.94px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 726 (Achieved FPS: 30.34 Hz over 23.93s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 825.9, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 751.8, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 745.3, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 460.1, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 738.7, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.75%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.14%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 10.08 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.0252 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625196.212524571] [minimal_vo]: [725] Pos: (-59.87, 15.16, -38.39) | Matched: 254, InliersE: 254, InliersPose: 211, InliersH: 254 | LKErr: 0.92px
+[INFO] [1788625196.826240900] [live_ground_truth_recorder]: [1600] LIVE GT Stamp (Sim): 31.576 s | Pos: (27.4963, -7.5973, 2.3298) m | Quat(xyzw): (-0.0182, -0.0104, 0.7555, 0.6548)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 751 (Achieved FPS: 30.34 Hz over 24.75s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 819.1, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 744.6, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 737.9, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 460.2, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 731.3, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.73%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.14%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 10.19 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.0373 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625197.044654544] [minimal_vo]: [750] Pos: (-62.51, 15.66, -45.68) | Matched: 127, InliersE: 127, InliersPose: 127, InliersH: 127 | LKErr: 1.08px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 776 (Achieved FPS: 30.34 Hz over 25.58s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 810.2, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 735.5, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 728.9, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 457.9, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 722.5, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.73%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 95.17%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 10.09 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.0333 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625197.898228379] [minimal_vo]: [775] Pos: (-78.79, 11.43, -42.48) | Matched: 236, InliersE: 236, InliersPose: 236, InliersH: 236 | LKErr: 0.95px
+[INFO] [1788625198.533216582] [live_ground_truth_recorder]: [1700] LIVE GT Stamp (Sim): 33.226 s | Pos: (28.1528, -7.4769, 2.3306) m | Quat(xyzw): (-0.0045, -0.0143, 0.6757, 0.7370)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 801 (Achieved FPS: 30.34 Hz over 26.40s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 813.3, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 732.8, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 725.7, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 457.4, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 719.3, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.44%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 94.88%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 10.35 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.0483 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625198.763689258] [minimal_vo]: [800] Pos: (-84.61, 9.55, -44.11) | Matched: 215, InliersE: 215, InliersPose: 192, InliersH: 214 | LKErr: 1.07px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 826 (Achieved FPS: 30.34 Hz over 27.23s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 810.5, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 727.4, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 720.4, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 456.1, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 713.3, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.33%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 94.79%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 10.34 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.0634 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625199.625319053] [minimal_vo]: [825] Pos: (-89.22, 5.15, -43.04) | Matched: 512, InliersE: 512, InliersPose: 512, InliersH: 512 | LKErr: 1.25px
+[INFO] [1788625200.260403222] [live_ground_truth_recorder]: [1800] LIVE GT Stamp (Sim): 34.885 s | Pos: (27.9998, -7.5295, 2.3378) m | Quat(xyzw): (0.0063, 0.0031, 0.5601, 0.8284)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 851 (Achieved FPS: 30.34 Hz over 28.05s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 806.6, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 721.0, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 713.9, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 454.1, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 706.8, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 95.21%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 94.64%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 10.44 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.0660 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625200.492445307] [minimal_vo]: [850] Pos: (-103.25, 8.97, -32.60) | Matched: 1920, InliersE: 1794, InliersPose: 1082, InliersH: 1606 | LKErr: 4.72px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 876 (Achieved FPS: 30.34 Hz over 28.88s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 808.5, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 717.8, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 710.5, Min = 0, Max = 1997
+  Pose Inliers (recover)  : Mean = 451.5, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 703.1, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 94.97%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 94.36%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 10.68 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.0873 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625201.339575615] [minimal_vo]: [875] Pos: (-106.64, 11.21, -18.35) | Matched: 364, InliersE: 364, InliersPose: 188, InliersH: 353 | LKErr: 0.67px
+[INFO] [1788625201.975302252] [live_ground_truth_recorder]: [1900] LIVE GT Stamp (Sim): 36.558 s | Pos: (28.0430, -7.6508, 2.3552) m | Quat(xyzw): (-0.0049, 0.0009, 0.8260, 0.5637)
+[EVENT: MOTION_END] Motion profile 'F9' completed (20.01s >= 20.0s).
+
+[EVENT: RETURN_START] Motion sequence finished. Returning to hover at spawn line (0,0) for 2.0s before landing...
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 901 (Achieved FPS: 30.34 Hz over 29.70s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 820.4, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 718.6, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 711.1, Min = 0, Max = 1999
+  Pose Inliers (recover)  : Mean = 448.3, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 703.9, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 94.42%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 93.83%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 10.59 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.0849 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625202.210480756] [minimal_vo]: [900] Pos: (-112.44, 17.22, -19.83) | Matched: 1927, InliersE: 1826, InliersPose: 1327, InliersH: 1816 | LKErr: 3.45px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 926 (Achieved FPS: 30.34 Hz over 30.52s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 827.4, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 723.6, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 715.8, Min = 0, Max = 1999
+  Pose Inliers (recover)  : Mean = 456.8, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 708.3, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 94.30%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 93.75%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 10.78 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.1050 px, Max = 7.0531 px
+======================================================================
+
+[INFO] [1788625203.052258034] [minimal_vo]: [925] Pos: (-118.76, 8.12, -17.41) | Matched: 1249, InliersE: 1237, InliersPose: 1233, InliersH: 1190 | LKErr: 1.67px
+[INFO] [1788625203.691077156] [live_ground_truth_recorder]: [2000] LIVE GT Stamp (Sim): 38.209 s | Pos: (22.0111, -7.0347, 2.4412) m | Quat(xyzw): (-0.0003, -0.0758, 0.7450, 0.6627)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 951 (Achieved FPS: 30.33 Hz over 31.35s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 824.7, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 720.8, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 711.2, Min = 0, Max = 1999
+  Pose Inliers (recover)  : Mean = 458.8, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 701.7, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 94.05%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 93.70%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 11.35 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.1749 px, Max = 9.7081 px
+======================================================================
+
+[INFO] [1788625203.997562303] [minimal_vo]: [950] Pos: (-116.24, -8.50, -5.84) | Matched: 403, InliersE: 393, InliersPose: 393, InliersH: 264 | LKErr: 3.35px
+[EVENT: LAND_START] Sending LAND command to PX4...
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 976 (Achieved FPS: 30.33 Hz over 32.17s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 822.2, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 718.7, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 709.2, Min = 0, Max = 1999
+  Pose Inliers (recover)  : Mean = 463.0, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 696.7, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 94.08%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 93.71%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 11.50 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.1972 px, Max = 9.7081 px
+======================================================================
+
+[INFO] [1788625204.767422527] [minimal_vo]: [975] Pos: (-95.19, -0.42, -3.59) | Matched: 1663, InliersE: 1659, InliersPose: 1658, InliersH: 1388 | LKErr: 1.50px
+[INFO] [1788625205.409058993] [live_ground_truth_recorder]: [2100] LIVE GT Stamp (Sim): 39.864 s | Pos: (13.5633, -7.5054, 2.1208) m | Quat(xyzw): (0.0679, 0.0836, 0.7357, 0.6687)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 1001 (Achieved FPS: 30.33 Hz over 33.00s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 837.0, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 735.8, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 726.4, Min = 0, Max = 1999
+  Pose Inliers (recover)  : Mean = 485.9, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 710.4, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 94.22%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 93.85%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 11.39 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.2044 px, Max = 9.7081 px
+======================================================================
+
+[INFO] [1788625205.614315076] [minimal_vo]: [1000] Pos: (-74.93, 10.48, 3.46) | Matched: 920, InliersE: 919, InliersPose: 919, InliersH: 919 | LKErr: 1.41px
+[EVENT: LAND_COMPLETE] Land command sent. Exiting motion generator.
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 1026 (Achieved FPS: 30.33 Hz over 33.83s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 841.1, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 740.3, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 731.0, Min = 0, Max = 1999
+  Pose Inliers (recover)  : Mean = 495.3, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 714.2, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 94.25%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 93.88%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 11.22 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.2049 px, Max = 9.7081 px
+======================================================================
+
+[INFO] [1788625206.493736014] [minimal_vo]: [1025] Pos: (-63.70, 16.25, 12.61) | Matched: 1599, InliersE: 1597, InliersPose: 1435, InliersH: 1552 | LKErr: 1.13px
+[INFO] [1788625207.120820906] [live_ground_truth_recorder]: [2200] LIVE GT Stamp (Sim): 41.513 s | Pos: (11.6083, -7.5668, 1.1111) m | Quat(xyzw): (-0.0080, -0.0087, 0.7484, 0.6631)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 1051 (Achieved FPS: 30.33 Hz over 34.65s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 837.7, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 739.3, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 730.3, Min = 0, Max = 1999
+  Pose Inliers (recover)  : Mean = 499.1, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 713.9, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 94.39%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 94.02%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 11.13 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.2034 px, Max = 9.7081 px
+======================================================================
+
+[INFO] [1788625207.351550578] [minimal_vo]: [1050] Pos: (-48.92, 25.67, 15.00) | Matched: 348, InliersE: 348, InliersPose: 348, InliersH: 348 | LKErr: 1.24px
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 1076 (Achieved FPS: 30.33 Hz over 35.48s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 824.1, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 728.0, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 719.2, Min = 0, Max = 1999
+  Pose Inliers (recover)  : Mean = 493.2, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 703.1, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 94.52%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 94.16%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 11.08 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.2110 px, Max = 9.7081 px
+======================================================================
+
+[INFO] [1788625208.179721192] [minimal_vo]: [1075] Pos: (-46.12, 33.73, 20.07) | Matched: 130, InliersE: 130, InliersPose: 130, InliersH: 130 | LKErr: 1.79px
+[INFO] [1788625208.844102658] [live_ground_truth_recorder]: [2300] LIVE GT Stamp (Sim): 43.155 s | Pos: (10.2277, -7.4421, -0.0230) m | Quat(xyzw): (0.0060, 0.0070, 0.7492, 0.6623)
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 1101 (Achieved FPS: 30.33 Hz over 36.30s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 823.7, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 727.9, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 718.9, Min = 0, Max = 1999
+  Pose Inliers (recover)  : Mean = 496.7, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 699.3, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 94.52%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 94.20%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 10.98 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.2246 px, Max = 9.7081 px
+======================================================================
+
+[INFO] [1788625209.046998384] [minimal_vo]: [1100] Pos: (-41.65, 46.05, 12.31) | Matched: 167, InliersE: 156, InliersPose: 107, InliersH: 167 | LKErr: 2.29px
+
+[INFO] Signal received in MinimalVO. Saving CSV before exiting...
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 1107 (Achieved FPS: 30.33 Hz over 36.50s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 824.3, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 727.1, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 717.8, Min = 0, Max = 1999
+  Pose Inliers (recover)  : Mean = 495.7, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 698.1, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 94.41%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 94.11%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 11.00 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.2332 px, Max = 9.7081 px
+======================================================================
+
+
+======================================================================
+PHASE 0E — MONOCULAR VO EXECUTION REPORT
+======================================================================
+Tracking Pipeline      : KLT
+Total Processed Frames : 1107 (Achieved FPS: 30.33 Hz over 36.50s)
+Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_016_F9_L2_R1_vo.csv
+Streak Failure (Old)   : False (First at Frame #None)
+Window Failure (New)   : True (First at Frame #0)
+----------------------------------------------------------------------
+INTERMEDIATE METRICS SUMMARY:
+  Detected Features/Frame : Mean = 824.3, Min = 100, Max = 2000
+  Matched Features/Frame  : Mean = 727.1, Min = 0, Max = 2000
+  Essential Inliers (E)   : Mean = 717.8, Min = 0, Max = 1999
+  Pose Inliers (recover)  : Mean = 495.7, Min = 0, Max = 1942
+  Homography Inliers/Frame: Mean = 698.1, Min = 0, Max = 1997
+  Inlier Ratio            : Mean = 94.41%, Min = 0.00%, Max = 100.00%
+  Feature Survival Rate   : Mean = 94.11%, Min = 0.00%, Max = 100.00%
+  Feature Velocity (Mean) : Mean = 11.00 px/fr, Max = 49.23 px/fr
+  LK Tracking Error (Mean): Mean = 1.2332 px, Max = 9.7081 px
+======================================================================
+
+/home/purab/Purab/Projects/ROS/src/analyze_phase1_gt.py:281: RuntimeWarning: invalid value encountered in divide
+  e_ratio = np.where(matched > 0, num_E / matched, 0.0)
+/home/purab/Purab/Projects/ROS/src/analyze_phase1_gt.py:282: RuntimeWarning: invalid value encountered in divide
+  pose_e_ratio = np.where(num_E > 0, num_pose / num_E, 0.0)
+==========================================================================
+PHASE 1 PILOT RUN ANALYSIS REPORT:  (F9 Level L2)
+==========================================================================
+GT File : results/confirmation_016_F9_L2_R1_gt.csv
+VO File : results/confirmation_016_F9_L2_R1_vo.csv
+--------------------------------------------------------------------------
+1. CANONICAL WINDOW & SYNCHRONIZATION
+   - Window Source          : ALTITUDE_CRUISE_FALLBACK (Z >= 2.0m)
+   - Active Duration        : 22.85 s 
+   - Active GT Samples      : 1391 samples (60.9 Hz)
+   - Active VO Frames       : 692 frames (30.3 Hz)
+
+2. GT TIMESTAMP INTEGRITY & CLEAN DERIVATIVES
+   - GT dt Stats (Active)   : Min=1.000ms, Median=17.00ms, P95=25.00ms, Max=31.00ms
+   - Sub-2ms Jitter Bursts  : 4 intervals (0.29%) [Excluded from derivatives]
+   - Clean Speed (m/s)      : Mean=1.46, Median=0.99, P95=6.00, Max=30.30
+   - Clean Yaw Rate (deg/s) : Mean=0.09, P95=1.49, Max=4.88
+
+3. FRAME-AWARE ATTITUDE ENVELOPE (GAZEBO WORLD ENU)
+   - ENU Roll  (rot around Gazebo X) : Min/Max = [-43.1°, 26.0°], Peak Amp = 43.1°
+   - ENU Pitch (rot around Gazebo Y) : Min/Max = [-9.2°, 7.1°], Peak Amp = 9.2°
+   - ENU Yaw   (rot around Gazebo Z) : Min/Max = [-0.9°, 120.4°]
+
+4. RECOMPUTED VO-SUPPORT METRICS & POSE VALIDITY
+   - Valid Pose Updates (N_pose >= 8): 657/692 (94.9%)
+   - Essential Matrix Inliers (N_E)   : Mean = 693.3, Median = 484.5
+   - Pose Inliers (N_pose)            : Mean = 617.9, Median = 402.0
+   - E Inlier Ratio (N_E / N_m)        : Mean = 0.938, Median = 0.998
+   - Pose/E Agreement Ratio (N_p / N_E): Mean = 0.858, Median = 0.999
+   - Feature Survival Rate (S_f)      : Mean = 0.933, Median = 0.991
+   - Feature Velocity (v_px)          : Mean = 14.63 px/fr, P95 = 33.34 px/fr
+   - Mean LK Residual (e_lk)          : Mean = 1.45 px, Median = 1.23 px
+   - Monocular Unit-Scale Trans Mag   : Mean = 0.949 (Unit vectors ||t||=1.0, NOT metric meters)
+
+5. GT-REFERENCED FRAME-TO-FRAME ROTATION ERROR
+   - Rotation Error (deg/step) : Mean = 0.79°, Median = 0.60°, P95 = 2.34°
+--------------------------------------------------------------------------
+OVERALL STATUS: SUCCESSFUL PASS
+==========================================================================
+==========================================================================================
+PHASE 1 TRAJECTORY ORCHESTRATOR — Family: F9, Level: L2
+==========================================================================================
+GT Log File : results/confirmation_016_F9_L2_R1_gt.csv
+VO Log File : results/confirmation_016_F9_L2_R1_vo.csv
+------------------------------------------------------------------------------------------
+[CLEANUP] Terminating existing simulation processes...
+[1/6] Launching PX4 SITL (World: agriculture.world, Spawn: 14.0505,-7.5229,0.1076,0,0,0)...
+[2/6] Waiting for Gazebo camera topic...
+      Gazebo camera topic detected on world 'default'!
+[3/6] Launching ros_gz_bridge for world 'default'...
+[4/6] Launching record_ground_truth.py -> results/confirmation_016_F9_L2_R1_gt.csv...
+[5/6] Launching minimal_vo.py & Motion Generator for F9 at L2...
+
+[6/6] Flight complete. Waiting 3.0s for VO node to finish processing remaining frames...
+[CLEANUP] Terminating existing simulation processes...
+
+Running GT Telemetry & Kinematics Analysis...
+
+>>> PILOT TRAJECTORY F9 L2 PASSED VERIFICATION! <<<

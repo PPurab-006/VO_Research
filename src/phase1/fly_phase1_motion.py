@@ -29,7 +29,7 @@ MAX_DESCENT_RATE_MPS = 2.0
 
 def main():
     parser = argparse.ArgumentParser(description="Phase 1 Motion Generator")
-    parser.add_argument('--family', type=str, required=True, choices=['F1','F2','F4','F5','F6','F9','F10','F11','HOVER'], help="Motion family ID")
+    parser.add_argument('--family', type=str, required=True, choices=['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','HOVER'], help="Motion family ID")
     parser.add_argument('--severity', type=int, default=2, choices=[0,1,2,3,4,5], help="Severity level (0..5)")
     parser.add_argument('--duration', type=float, default=20.0, help="Flight duration in seconds")
     parser.add_argument('--alt-z', type=float, default=2.41, help="Hover altitude Z (m ENU)")
@@ -178,16 +178,21 @@ def main():
             # Position mask 3576 (0x0DF8): Pos X, Y, Z + Yaw Angle enabled
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=0.0, mask=3576)
 
+        elif family == 'F3': # Vertical Climb / Descend Oscillation
+            curr_x_local = 0.0
+            curr_y_local = 0.0
+            f_z = 0.25
+            A_z = 0.5 * min(sev_factor, 1.0)
+            curr_z_enu = alt_z + A_z * math.sin(2.0 * math.pi * f_z * elapsed)
+            send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=0.0, mask=3576)
+
         elif family == 'F4': # Roll + Translation (Coupled Longitudinal Translation + Dynamic Roll Oscillation)
             v_fwd = 1.0 * sev_factor
             f_roll = 0.5  # Roll oscillation frequency 0.5 Hz
             A_roll_pos = (0.8 * sev_factor) / (2.0 * math.pi * f_roll)  # 0.2546m amplitude for L2
-            # Setpoint on Local Y (East): Forward progress (0->14m) + Roll oscillation (+/-0.255m at 0.5Hz)
-            # Since quadrotor nose points North (yaw=0), East motion forces true body ROLL tilt
             curr_y_local = min(v_fwd * elapsed, 14.0) + A_roll_pos * math.sin(2.0 * math.pi * f_roll * elapsed)
             curr_x_local = 0.0
             curr_z_enu = alt_z
-            # Position mask 3576 (0x0DF8): Pos X, Y, Z + Yaw Angle enabled
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=0.0, mask=3576)
 
         elif family == 'F5': # Pitch + Translation (Coupled Dynamic Body Pitch Oscillation + Forward Translation)
@@ -197,7 +202,6 @@ def main():
             A_pitch_pos = (0.6 * sev_factor) / (2.0 * math.pi * f_pitch)  # 0.191m amplitude for L2
             curr_x_local = A_pitch_pos * math.sin(2.0 * math.pi * f_pitch * elapsed)
             curr_z_enu = alt_z
-            # Position mask 3576 (0x0DF8): Pos X, Y, Z + Yaw Angle enabled
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=0.0, mask=3576)
 
         elif family == 'F6': # Pure Yaw Oscillation
@@ -207,7 +211,30 @@ def main():
             f_yaw = 0.25  # 0.25 Hz frequency (4.0s period)
             A_yaw_deg = 30.0 * min(sev_factor, 1.0)  # +/-30 degrees amplitude at L2
             yaw_target_rad = math.radians(A_yaw_deg) * math.sin(2.0 * math.pi * f_yaw * elapsed)
-            # Position + Yaw mask 2552 (0x0F98): Pos X, Y, Z + Yaw Angle ENABLED
+            send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=yaw_target_rad, mask=3576)
+
+        elif family == 'F7': # Pitch + Yaw Translation
+            v_fwd = 1.0 * sev_factor
+            curr_y_local = min(v_fwd * elapsed, 14.0)
+            f_pitch = 0.5
+            A_pitch_pos = (0.5 * sev_factor) / (2.0 * math.pi * f_pitch)
+            curr_x_local = A_pitch_pos * math.sin(2.0 * math.pi * f_pitch * elapsed)
+            curr_z_enu = alt_z
+            f_yaw = 0.25
+            A_yaw_deg = 20.0 * min(sev_factor, 1.0)
+            yaw_target_rad = math.radians(A_yaw_deg) * math.sin(2.0 * math.pi * f_yaw * elapsed)
+            send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=yaw_target_rad, mask=3576)
+
+        elif family == 'F8': # Roll + Yaw Translation
+            v_fwd = 1.0 * sev_factor
+            f_roll = 0.5
+            A_roll_pos = (0.5 * sev_factor) / (2.0 * math.pi * f_roll)
+            curr_y_local = min(v_fwd * elapsed, 14.0) + A_roll_pos * math.sin(2.0 * math.pi * f_roll * elapsed)
+            curr_x_local = 0.0
+            curr_z_enu = alt_z
+            f_yaw = 0.25
+            A_yaw_deg = 20.0 * min(sev_factor, 1.0)
+            yaw_target_rad = math.radians(A_yaw_deg) * math.sin(2.0 * math.pi * f_yaw * elapsed)
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=yaw_target_rad, mask=3576)
 
         elif family == 'F9': # Yaw + Translation (Coupled Forward Translation + Dynamic Yaw Oscillation)

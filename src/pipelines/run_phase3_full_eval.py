@@ -112,8 +112,7 @@ def evaluate_dataset_mechanisms(dataset_dir, gt_csv_path):
 
 def run_full_matrix_evaluation(dataset_root="results/datasets"):
     print("==========================================================================")
-    print("PHASE 3 BATCH EVALUATION MATRIX ENGINE (CORE vs EXPLORATORY)")
-    print("==========================================================================\n")
+    print("[INFO] Phase 3 Batch Matrix Evaluation Engine")
 
     core_families = ['F1_L2', 'F2_L2', 'F4_L2', 'F5_L2', 'F6_L2', 'F9_L2', 'F10_L3', 'F11_L2']
     exploratory_families = ['HOVER_L0', 'F3_L2', 'F7_L2', 'F8_L2']
@@ -123,8 +122,8 @@ def run_full_matrix_evaluation(dataset_root="results/datasets"):
         group_results = {}
         summary_rows = []
 
-        track_label = "EXPLORATORY TRACK (PRELIMINARY)" if is_exploratory else "CORE MATRIX (PHASE-1-VALIDATED)"
-        print(f"\n>>> {track_label} <<<")
+        track_label = "Exploratory Matrix" if is_exploratory else "Core Matrix"
+        print(f"\n[INFO] Evaluating {track_label}:")
         print(f"{'Family':<12} | {'Mechanism':<12} | {'Evaluated Runs':<14} | {'ATE RMSE (m)':<22} | {'RPE-t (m/step)':<22} | {'RPE-t (scale-norm)':<24}")
         print("-" * 105)
 

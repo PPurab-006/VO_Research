@@ -40,15 +40,10 @@ def main():
     duration = args.duration
     alt_z = args.alt_z
 
-    print("==========================================================================")
-    print(f"PHASE 1 MOTION GENERATOR — Family: {family}, Severity: L{severity}")
-    print("==========================================================================")
-    print(f"Local Origin (0,0)  : PX4 EKF Spawn (Gazebo X: 14.0505m, Y: -7.5229m)")
-    print(f"Frame Mapping       : PX4 +Y_NED -> Gazebo +X (Longitudinal), PX4 +X_NED -> Gazebo +Y (Lateral)")
-    print(f"Cruise Altitude Z   : {alt_z:.2f} m ENU (-{alt_z:.2f} m NED)")
-    print(f"Planned Duration    : {duration:.1f} s after TAKEOFF_READY")
-    print(f"Local Geofence Bounds: Local X[{LOCAL_X_MIN},{LOCAL_X_MAX}] Local Y[{LOCAL_Y_MIN},{LOCAL_Y_MAX}] Alt Z[{SAFE_Z_MIN},{SAFE_Z_MAX}]")
-    print("--------------------------------------------------------------------------")
+    print(f"[INFO] Phase 1 Motion Generator — Family: {family}, Severity: L{severity}")
+    print(f"[INFO] Local Origin (0,0): PX4 EKF Spawn (Gazebo X: 14.05m, Y: -7.52m)")
+    print(f"[INFO] Cruise Altitude Z: {alt_z:.2f} m ENU | Planned Duration: {duration:.1f} s")
+    print(f"[INFO] Local Geofence Bounds: X[{LOCAL_X_MIN},{LOCAL_X_MAX}] Y[{LOCAL_Y_MIN},{LOCAL_Y_MAX}] Z[{SAFE_Z_MIN},{SAFE_Z_MAX}]")
 
     # Connect to PX4 SITL MAVLink UDP port
     mav_addr = "udpin:0.0.0.0:14540"

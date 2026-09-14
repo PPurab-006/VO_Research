@@ -1,0 +1,1 @@
+sample_idx,timestamp_total_sec,msg_type,setpoint_x,setpoint_y,setpoint_z,setpoint_vx,setpoint_vy,setpoint_vz,type_mask,base_mode,custom_mode,nav_state,publish_gap_ms

@@ -108,20 +108,32 @@ def evaluate_single_run(vo_csv_path, gt_csv_path):
     invalid_mask = (n_pose < 8)
     tracking_loss_pct = (np.sum(invalid_mask) / len(df_vo_act)) * 100.0
 
+    # Per-step RPE breakdown (valid vs starved frames)
+    err_series = rpe_t_metric.error
+    step_valid_mask = ~invalid_mask[:-1]
+    step_invalid_mask = invalid_mask[:-1]
+
+    rpe_norm_series = err_series / s_factor if s_factor > 1e-6 else err_series
+    rpe_t_norm_valid = float(np.mean(rpe_norm_series[step_valid_mask])) if np.sum(step_valid_mask) > 0 else 0.0
+    rpe_t_norm_starved = float(np.mean(rpe_norm_series[step_invalid_mask])) if np.sum(step_invalid_mask) > 0 else 0.0
+
     # 5. Recovery Time (seconds & frames)
     rec_frames, rec_secs = compute_recovery_time(invalid_mask, timestamps)
 
     # 6. Drift per Meter Traveled (m/m)
-    # Calculate GT path length
     gt_steps = np.linalg.norm(np.diff(gt_pos, axis=0), axis=1)
     gt_path_len = float(np.sum(gt_steps))
     drift_per_meter = float(ate_rmse / gt_path_len) if gt_path_len > 0.1 else 0.0
 
     return {
         'n_frames': len(df_vo_act),
+        'n_valid_frames': int(np.sum(~invalid_mask)),
+        'n_invalid_frames': int(np.sum(invalid_mask)),
         'ate_rmse': float(ate_rmse),
         'rpe_t_mean': float(rpe_t_mean),
         'rpe_t_norm': float(rpe_t_norm),
+        'rpe_t_norm_valid': float(rpe_t_norm_valid),
+        'rpe_t_norm_starved': float(rpe_t_norm_starved),
         'rpe_r_mean_deg': float(rpe_r_mean_deg),
         'tracking_loss_pct': float(tracking_loss_pct),
         'recovery_time_sec': float(rec_secs),

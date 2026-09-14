@@ -56,11 +56,18 @@ def compute_stats_with_ci(values):
 
 
 def evaluate_dataset_mechanisms(dataset_dir, gt_csv_path):
+    import hashlib
+
     mechs = {
         'RAW': os.path.join(dataset_dir, 'raw_vo.csv'),
         'EIS-GATED': os.path.join(dataset_dir, 'eis_gated_vo.csv'),
         'DELAYED-TRI': os.path.join(dataset_dir, 'gated_dt_def_a_vo.csv')
     }
+
+    # Assert source file paths are 3 distinct non-identical paths
+    paths = list(mechs.values())
+    if len(set(paths)) != 3:
+        raise ValueError(f"Source file paths must be 3 distinct paths, got: {paths}")
 
     res_dict = {}
     for mech_name, vo_csv in mechs.items():
@@ -69,6 +76,37 @@ def evaluate_dataset_mechanisms(dataset_dir, gt_csv_path):
             res_dict[mech_name] = eval_res
         else:
             res_dict[mech_name] = None
+
+    # Verification of md5sums & R-frame feature deferrals
+    raw_p = mechs['RAW']
+    gated_p = mechs['EIS-GATED']
+    dt_p = mechs['DELAYED-TRI']
+
+    if os.path.exists(raw_p) and os.path.exists(gated_p) and os.path.exists(dt_p):
+        h_raw = hashlib.md5(open(raw_p, 'rb').read()).hexdigest()
+        h_gated = hashlib.md5(open(gated_p, 'rb').read()).hexdigest()
+        h_dt = hashlib.md5(open(dt_p, 'rb').read()).hexdigest()
+
+        df_gated = pd.read_csv(gated_p)
+        df_dt = pd.read_csv(dt_p)
+
+        n_r_frames = (df_gated['eis_yaw_rate_deg'] > 15.0).sum() if 'eis_yaw_rate_deg' in df_gated.columns else 0
+        n_pending = df_dt['num_pending'].sum() if 'num_pending' in df_dt.columns else 0
+
+        ds_name = os.path.basename(dataset_dir)
+        print(f"  [VERIFY {ds_name}] R-frames (>15 deg/s): {n_r_frames}, Deferred Pending Sum: {n_pending}")
+        print(f"    RAW MD5    : {h_raw}")
+        print(f"    GATED MD5  : {h_gated}")
+        print(f"    DT MD5     : {h_dt}")
+
+        if n_r_frames > 0 and n_pending > 0:
+            if h_gated == h_dt:
+                raise RuntimeError(f"CRITICAL BUG in {ds_name}: DELAYED-TRI output is byte-identical to EIS-GATED despite {n_r_frames} R-frames and {n_pending} deferred pending features!")
+            else:
+                print(f"    [PASS] Confirmed distinct DELAYED-TRI output for rotation dataset {ds_name}")
+        elif n_r_frames == 0:
+            print(f"    [INFO] 0 R-frames detected in {ds_name} -> Baseline-identical DELAYED-TRI expected by design (dormant control cell)")
+
     return res_dict
 
 

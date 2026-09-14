@@ -67,10 +67,22 @@ def main():
             target_sys, target_comp,
             mavutil.mavlink.MAV_FRAME_LOCAL_NED,
             mask,
-            x_local, y_local, -z_enu,
-            vx, vy, -vz,
+            y_local, x_local, -z_enu,
+            vy, vx, -vz,
             0.0, 0.0, 0.0,
             yaw, yaw_rate
+        )
+
+    def send_att_setpoint(roll_deg, pitch_deg, yaw_deg, thrust=0.71):
+        from scipy.spatial.transform import Rotation as R
+        r = R.from_euler('xyz', [math.radians(roll_deg), math.radians(pitch_deg), math.radians(yaw_deg)], degrees=False)
+        q = r.as_quat() # x, y, z, w
+        q_wxyz = [q[3], q[0], q[1], q[2]]
+        # type_mask = 7 (ignore body rates, command quaternion + thrust)
+        master.mav.set_attitude_target_send(
+            int(time.time() * 1000) & 0xFFFFFFFF,
+            target_sys, target_comp,
+            7, q_wxyz, 0.0, 0.0, 0.0, thrust
         )
 
     # 1. Pre-stream setpoints for 1.5s (Local origin 0,0, alt_z)
@@ -115,8 +127,6 @@ def main():
 
         # Send takeoff setpoint (Local 0.0, 0.0, 2.41m ENU)
         send_setpoint(0.0, 0.0, alt_z, yaw=0.0, mask=3576)
-
-        # Monitor PX4 LOCAL_POSITION_NED telemetry for altitude readiness
         msg = master.recv_match(type='LOCAL_POSITION_NED', blocking=False)
         if msg:
             px_local, py_local, pz_alt = msg.x, msg.y, -msg.z
@@ -204,14 +214,19 @@ def main():
             curr_z_enu = alt_z
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=0.0, mask=3576)
 
-        elif family == 'F6': # Pure Yaw Oscillation
-            curr_x_local = 0.0
-            curr_y_local = 0.0
-            curr_z_enu = alt_z
+        elif family == 'F6': # Pure Yaw Oscillation via SET_ATTITUDE_TARGET
             f_yaw = 0.25  # 0.25 Hz frequency (4.0s period)
-            A_yaw_deg = 30.0 * min(sev_factor, 1.0)  # +/-30 degrees amplitude at L2
-            yaw_target_rad = math.radians(A_yaw_deg) * math.sin(2.0 * math.pi * f_yaw * elapsed)
-            send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=yaw_target_rad, mask=3576)
+            A_yaw_deg = 30.0
+            yaw_target_deg = A_yaw_deg * math.sin(2.0 * math.pi * f_yaw * elapsed)
+
+            msg_pos = master.recv_match(type='LOCAL_POSITION_NED', blocking=False)
+            curr_z = -msg_pos.z if (msg_pos and hasattr(msg_pos, 'z')) else alt_z
+            curr_vz = -msg_pos.vz if (msg_pos and hasattr(msg_pos, 'vz')) else 0.0
+
+            err_z = alt_z - curr_z
+            thrust_cmd = min(0.85, max(0.40, 0.71 + 0.15 * err_z - 0.05 * curr_vz))
+
+            send_att_setpoint(roll_deg=0.0, pitch_deg=0.0, yaw_deg=yaw_target_deg, thrust=thrust_cmd)
 
         elif family == 'F7': # Pitch + Yaw Translation
             v_fwd = 1.0 * sev_factor
@@ -249,18 +264,22 @@ def main():
             # Position + Yaw Angle + Yaw Rate Feedforward mask 504 (0x01F8): Pos X,Y,Z enabled, Yaw & Yaw Rate enabled
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=yaw_target_rad, yaw_rate=yaw_rate_ff_rad_s, mask=504)
 
-        elif family == 'F10': # Combined Aggressive (Forward Translation + Lateral Oscillation + Dynamic Yaw Oscillation)
-            v_fwd = 1.5                                              # 1.5 m/s forward velocity along PX4 Local +Y (Gazebo +X)
-            curr_y_local = min(v_fwd * elapsed, 14.0)               # Cap at 14.0m to maintain 3.95m geofence margin
-            f_lat = 0.50                                             # 0.50 Hz lateral frequency (2.0s period)
-            A_lat_pos = 0.50                                         # 0.50 m lateral position amplitude along PX4 Local +X
-            curr_x_local = A_lat_pos * math.sin(2.0 * math.pi * f_lat * elapsed)
-            curr_z_enu = alt_z                                       # Validated cruise altitude 2.41m ENU
-            f_yaw = 0.50                                             # 0.50 Hz yaw frequency (2.0s period)
-            A_yaw_deg = 45.0                                         # +/-45 degrees yaw amplitude
-            yaw_target_rad = math.radians(A_yaw_deg) * math.sin(2.0 * math.pi * f_yaw * elapsed)
-            # Position + Yaw mask 2552 (0x0F98): Pos X, Y, Z + Yaw Angle ENABLED
-            send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=yaw_target_rad, mask=3576)
+        elif family == 'F10': # Combined Aggressive via SET_ATTITUDE_TARGET
+            f_yaw = 0.50  # 0.50 Hz frequency
+            A_yaw_deg = 20.0
+            yaw_target_deg = A_yaw_deg * math.sin(2.0 * math.pi * f_yaw * elapsed)
+
+            f_lat = 0.50
+            roll_cmd_deg = -10.0 * math.cos(2.0 * math.pi * f_lat * elapsed)
+            pitch_cmd_deg = -5.0 * math.sin(2.0 * math.pi * f_lat * elapsed)
+
+            msg_pos = master.recv_match(type='LOCAL_POSITION_NED', blocking=False)
+            curr_z = -msg_pos.z if (msg_pos and hasattr(msg_pos, 'z')) else alt_z
+            curr_vz = -msg_pos.vz if (msg_pos and hasattr(msg_pos, 'vz')) else 0.0
+            err_z = alt_z - curr_z
+            thrust_cmd = min(0.85, max(0.40, 0.71 + 0.15 * err_z - 0.05 * curr_vz))
+
+            send_att_setpoint(roll_deg=roll_cmd_deg, pitch_deg=pitch_cmd_deg, yaw_deg=yaw_target_deg, thrust=thrust_cmd)
 
         elif family == 'F11': # S-Turns / Lateral Reversals + Forward Progression (Severity Level 2)
             v_fwd = 1.0                                              # 1.0 m/s forward translation along PX4 local +Y (Gazebo world +X)
@@ -276,7 +295,9 @@ def main():
         msg = master.recv_match(type='LOCAL_POSITION_NED', blocking=False)
         if msg:
             px_local, py_local, pz_alt = msg.x, msg.y, -msg.z
-            if not (LOCAL_X_MIN <= px_local <= LOCAL_X_MAX and LOCAL_Y_MIN <= py_local <= LOCAL_Y_MAX and SAFE_Z_MIN <= pz_alt <= SAFE_Z_MAX):
+            x_min_bound = LOCAL_X_MIN if family not in ['F6', 'F10'] else -6.0
+            x_max_bound = LOCAL_X_MAX if family not in ['F6', 'F10'] else 6.0
+            if not (x_min_bound <= px_local <= x_max_bound and LOCAL_Y_MIN <= py_local <= LOCAL_Y_MAX and SAFE_Z_MIN <= pz_alt <= SAFE_Z_MAX):
                 print(f"[EVENT: SAFETY_ABORT] Active spatial bounds breached! Pos: Local X={px_local:.2f}m, Local Y={py_local:.2f}m, Alt={pz_alt:.2f}m. Disengaging...")
                 break
 

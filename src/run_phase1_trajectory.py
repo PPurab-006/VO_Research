@@ -1,1 +1,0 @@
-phase1/run_phase1_trajectory.py

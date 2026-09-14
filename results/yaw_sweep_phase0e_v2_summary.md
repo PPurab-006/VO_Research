@@ -1,1 +1,0 @@
-data_tables/experiments/yaw_sweep_phase0e_v2_summary.md

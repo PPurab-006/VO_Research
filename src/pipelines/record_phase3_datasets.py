@@ -16,13 +16,7 @@ After each raw recording, runs offline VO for all 3 mechanisms:
 """
 
 import argparse
-import os
-import sys
-import time
-import subprocess
-import pandas as pd
-import numpy as np
-
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'archive_phase0', 'prototypes')))
 from record_single_phase2a_dataset import record_dataset, kill_all_sim_processes
 
 
@@ -137,7 +131,8 @@ def run_offline_vo_all_mechs(dataset_dir):
     gated_vo_csv = os.path.join(dataset_dir, "eis_gated_vo.csv")
     dt_vo_csv = os.path.join(dataset_dir, "gated_dt_def_a_vo.csv")
 
-    cmd_base = [sys.executable, "src/phase2/run_offline_vo.py", "--dataset-dir", dataset_dir, "--gt-csv", gt_csv]
+    offline_vo_script = os.path.join(os.path.dirname(__file__), "run_offline_vo.py")
+    cmd_base = [sys.executable, offline_vo_script, "--dataset-dir", dataset_dir, "--gt-csv", gt_csv]
 
     # 1. RAW VO
     print(f"  Running Offline VO: RAW -> {raw_vo_csv}...")

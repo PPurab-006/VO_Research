@@ -1,1 +1,0 @@
-data_tables/experiments/roll_10deg_3dmap_comparison.md

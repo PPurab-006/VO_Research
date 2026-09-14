@@ -79,7 +79,6 @@ from scipy.spatial.transform import Rotation as R_scipy
 class VisualFieldObservatory:
     def __init__(self, K=None, width=1280, height=960, eis_derotator=None):
         if K is None:
-            # Default intrinsics from Phase 0A verification
             self.fx = 539.9363327026367
             self.fy = 539.9363708496094
             self.cx = 640.0
@@ -101,14 +100,12 @@ class VisualFieldObservatory:
         self.height = height
         self.eis_derotator = eis_derotator
 
-        # CV Optical to Gazebo ENU transformation matrix
         self.R_opt2gaz = np.array([
             [ 0.0,  0.0,  1.0],
             [-1.0,  0.0,  0.0],
             [ 0.0, -1.0,  0.0]
         ], dtype=np.float64)
 
-        # Internal state
         self.prev_img = None
         self.prev_pts = None
         self.prev_time_sec = None
@@ -126,13 +123,11 @@ class VisualFieldObservatory:
         Processes raw unwarped grayscale frame at timestamp total_sec.
         Returns a dictionary of per-frame VFO metrics.
         """
-        # 1. Texture density (mean image gradient magnitude)
         sobel_x = cv2.Sobel(cv_img, cv2.CV_64F, 1, 0, ksize=3)
         sobel_y = cv2.Sobel(cv_img, cv2.CV_64F, 0, 1, ksize=3)
         grad_mag = np.sqrt(sobel_x**2 + sobel_y**2)
         texture_density = float(np.mean(grad_mag))
 
-        # Initial frame or feature re-detection
         if self.prev_img is None or self.prev_pts is None or len(self.prev_pts) < 100:
             pts = cv2.goodFeaturesToTrack(cv_img, maxCorners=2000, qualityLevel=0.001, minDistance=5)
             self.prev_pts = pts
@@ -166,7 +161,6 @@ class VisualFieldObservatory:
 
         n_prev = len(self.prev_pts)
 
-        # 2. Pyramidal Lucas-Kanade Optical Flow
         curr_pts, status, err = cv2.calcOpticalFlowPyrLK(
             self.prev_img, cv_img, self.prev_pts, None,
             winSize=(21, 21), maxLevel=3,
@@ -181,7 +175,6 @@ class VisualFieldObservatory:
         survival_rate = float(n_tracked / n_prev) if n_prev > 0 else 0.0
         mean_lk_err = float(np.mean(err[status_flat])) if n_tracked > 0 else 0.0
 
-        # 3. Border loss calculation (outer 10% margin)
         margin_x = 0.10 * self.width
         margin_y = 0.10 * self.height
         prev_pts_2d = self.prev_pts.reshape(-1, 2)
@@ -193,7 +186,6 @@ class VisualFieldObservatory:
         lost_border_count = int(np.sum(is_border_prev & (~status_flat)))
         border_loss_pct = float(lost_border_count / num_border_prev * 100.0) if num_border_prev > 0 else 0.0
 
-        # Default values if tracking collapses
         num_inliers_E = 0
         num_inliers_pose = 0
         pose_e_ratio = 0.0
@@ -206,18 +198,15 @@ class VisualFieldObservatory:
         rot_flow_ratio = 0.0
 
         if n_tracked >= 5:
-            # Displacement vectors V = good_curr - good_prev
             V = good_curr - good_prev
             v_mags = np.linalg.norm(V, axis=1)
             vel_mean = float(np.mean(v_mags))
             vel_max = float(np.max(v_mags))
 
-            # Flow coherence: ||sum V|| / sum ||V||
             sum_V_mag = float(np.linalg.norm(np.sum(V, axis=0)))
             sum_v_mags = float(np.sum(v_mags))
             flow_coherence = float(sum_V_mag / (sum_v_mags + 1e-6))
 
-            # Flow direction histogram (16 bins in [-pi, pi])
             angles = np.arctan2(V[:, 1], V[:, 0])
             hist_counts, _ = np.histogram(angles, bins=16, range=(-np.pi, np.pi))
             P_hist = hist_counts / np.sum(hist_counts) if np.sum(hist_counts) > 0 else np.zeros(16)
@@ -225,7 +214,6 @@ class VisualFieldObservatory:
             nonzero_P = P_hist[P_hist > 0]
             flow_entropy = float(-np.sum(nonzero_P * np.log(nonzero_P)) / np.log(16)) if len(nonzero_P) > 0 else 0.0
 
-            # Essential Matrix RANSAC & Pose Recovery
             E, mask_E = cv2.findEssentialMat(
                 good_prev, good_curr, self.K,
                 method=cv2.RANSAC, prob=0.999, threshold=1.0
@@ -243,16 +231,13 @@ class VisualFieldObservatory:
 
             pose_e_ratio = float(num_inliers_pose / max(1, num_inliers_E))
 
-            # Rotational vs Translational Flow Decomposition using attitude telemetry
             if self.eis_derotator is not None and self.prev_time_sec is not None:
                 rot_flow_mag, trans_flow_mag, rot_flow_ratio = self._decompose_optical_flow(
                     good_prev, good_curr, self.prev_time_sec, total_sec
                 )
 
-        # Compute spatial distribution score on current tracked/detected points
         spatial_dist = self._compute_spatial_distribution(self.prev_pts, self.width, self.height)
 
-        # Prepare record
         record = {
             'frame_idx': self.frame_idx,
             'timestamp_total_sec': total_sec,
@@ -274,8 +259,6 @@ class VisualFieldObservatory:
             'rotational_flow_ratio': rot_flow_ratio
         }
 
-        # Update state for next frame
-        # If tracked points drops below 100, re-detect features
         if n_tracked < 100:
             pts = cv2.goodFeaturesToTrack(cv_img, maxCorners=2000, qualityLevel=0.001, minDistance=5)
             self.prev_pts = pts
@@ -324,31 +307,24 @@ class VisualFieldObservatory:
             R_cam_opt_prev = R_body_prev @ self.R_opt2gaz.T
             R_cam_opt_curr = R_body_curr @ self.R_opt2gaz.T
 
-            # Relative rotation from frame k-1 to frame k in optical frame:
-            # R_rel = R_cam_opt_curr.T @ R_cam_opt_prev
+            # R_rel = R_cam_opt_curr.T @ R_cam_opt_prev (relative rotation k-1 -> k)
             R_rel = R_cam_opt_curr.T @ R_cam_opt_prev
 
-            # Homography for pure rotation: H_rot = K @ R_rel @ K_inv
+            # H_rot = K @ R_rel @ K_inv (homography for pure rotation)
             H_rot = self.K @ R_rel @ self.K_inv
 
-            # Transform pts_prev through H_rot
             N = len(pts_prev)
             ones = np.ones((N, 1), dtype=np.float64)
-            homog_prev = np.hstack([pts_prev, ones]) # (N, 3)
+            homog_prev = np.hstack([pts_prev, ones])
 
-            # p_rot = (H_rot @ p_prev^T)^T
             p_rot_homog = (H_rot @ homog_prev.T).T
             p_rot_2d = p_rot_homog[:, :2] / p_rot_homog[:, 2:3]
 
-            # Rotational flow vector V_rot = p_rot_2d - pts_prev
             V_rot = p_rot_2d - pts_prev
             rot_mags = np.linalg.norm(V_rot, axis=1)
             rot_flow_mag = float(np.mean(rot_mags))
 
-            # Observed total flow V_obs = pts_curr - pts_prev
             V_obs = pts_curr - pts_prev
-
-            # Residual translational flow V_trans = V_obs - V_rot
             V_trans = V_obs - V_rot
             trans_mags = np.linalg.norm(V_trans, axis=1)
             trans_flow_mag = float(np.mean(trans_mags))

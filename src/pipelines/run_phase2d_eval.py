@@ -125,7 +125,6 @@ def run_phase2d_experiments():
         gated_dt_a_csv = os.path.join(dataset_dir, 'gated_dt_def_a_vo.csv')
         gated_dt_b_csv = os.path.join(dataset_dir, 'gated_dt_def_b_vo.csv')
 
-        # 1. RAW Baseline
         proc_raw = OfflineVOProcessor(output_csv_path=raw_csv, mode='klt', eis_derotator=None)
         proc_raw.load_telemetry(gt_csv)
         for _, row in df_cam.iterrows():
@@ -135,7 +134,6 @@ def run_phase2d_experiments():
         proc_raw.save_csv()
         m_raw = analyze_vo_csv(pd.read_csv(raw_csv), t_start, t_end, proc_raw.promotion_latencies)
 
-        # 2. RAW + Delayed Triangulation (Def a: yaw_rate)
         proc_raw_dt_a = OfflineVOProcessor(
             output_csv_path=raw_dt_a_csv, mode='klt', eis_derotator=None,
             delayed_triangulation=True, r_frame_def='yaw_rate', gate_thresh_deg=15.0, min_non_r_obs=3
@@ -148,7 +146,6 @@ def run_phase2d_experiments():
         proc_raw_dt_a.save_csv()
         m_raw_dt_a = analyze_vo_csv(pd.read_csv(raw_dt_a_csv), t_start, t_end, proc_raw_dt_a.promotion_latencies)
 
-        # 3. RAW + Delayed Triangulation (Def b: baseline_depth)
         proc_raw_dt_b = OfflineVOProcessor(
             output_csv_path=raw_dt_b_csv, mode='klt', eis_derotator=None,
             delayed_triangulation=True, r_frame_def='baseline_depth', baseline_depth_thresh=0.005, min_non_r_obs=3
@@ -161,7 +158,6 @@ def run_phase2d_experiments():
         proc_raw_dt_b.save_csv()
         m_raw_dt_b = analyze_vo_csv(pd.read_csv(raw_dt_b_csv), t_start, t_end, proc_raw_dt_b.promotion_latencies)
 
-        # 4. EIS-GATED Baseline
         eis_gated = EISDerotator(reference_mode='gated')
         eis_gated.load_attitude_telemetry(gt_csv)
         proc_gated = OfflineVOProcessor(output_csv_path=eis_gated_csv, mode='klt', eis_derotator=eis_gated, gate_thresh_deg=15.0)
@@ -173,7 +169,6 @@ def run_phase2d_experiments():
         proc_gated.save_csv()
         m_gated = analyze_vo_csv(pd.read_csv(eis_gated_csv), t_start, t_end, proc_gated.promotion_latencies)
 
-        # 5. EIS-GATED + Delayed Triangulation (Def a: yaw_rate)
         eis_gated_a = EISDerotator(reference_mode='gated')
         eis_gated_a.load_attitude_telemetry(gt_csv)
         proc_gated_dt_a = OfflineVOProcessor(
@@ -188,7 +183,6 @@ def run_phase2d_experiments():
         proc_gated_dt_a.save_csv()
         m_gated_dt_a = analyze_vo_csv(pd.read_csv(gated_dt_a_csv), t_start, t_end, proc_gated_dt_a.promotion_latencies)
 
-        # 6. EIS-GATED + Delayed Triangulation (Def b: baseline_depth)
         eis_gated_b = EISDerotator(reference_mode='gated')
         eis_gated_b.load_attitude_telemetry(gt_csv)
         proc_gated_dt_b = OfflineVOProcessor(

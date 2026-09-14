@@ -55,7 +55,7 @@ class EISDerotator:
         self.height = height
         self.reference_mode = reference_mode.lower()
 
-        # CV Optical to Gazebo ENU frame transformation matrix
+        # CV Optical -> Gazebo ENU world frame
         self.R_opt2gaz = np.array([
             [ 0.0,  0.0,  1.0],
             [-1.0,  0.0,  0.0],
@@ -89,7 +89,6 @@ class EISDerotator:
         if self.gt_times[0] > 1e12:
             self.gt_times = self.gt_times / 1e9
 
-        # Ensure strict monotonicity for Slerp
         unique_indices = np.where(np.diff(self.gt_times) > 1e-7)[0]
         unique_indices = np.append(unique_indices, len(self.gt_times) - 1)
 
@@ -107,7 +106,6 @@ class EISDerotator:
         rotations = R_scipy.from_quat(self.gt_quats)
         self.slerp = Slerp(self.gt_times, rotations)
 
-        # Set default reference orientation to initial attitude sample
         r_body_0 = rotations[0].as_matrix()
         self.R_ref = r_body_0 @ self.R_opt2gaz.T
         self.prev_R_body = None
@@ -158,7 +156,6 @@ class EISDerotator:
             R_cam_opt_k = self.get_optical_attitude(R_body_k)
             R_rel_opt = R_cam_opt_k.T @ R_ref_target
 
-            # Compute body yaw rate |omega_z|
             if self.prev_R_body is not None and t_sec is not None and prev_t_sec is not None:
                 dt = max(1e-4, t_sec - prev_t_sec)
                 R_rel_body = self.prev_R_body.T @ R_body_k

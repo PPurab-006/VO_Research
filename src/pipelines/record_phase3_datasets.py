@@ -134,17 +134,14 @@ def run_offline_vo_all_mechs(dataset_dir):
     offline_vo_script = os.path.join(os.path.dirname(__file__), "run_offline_vo.py")
     cmd_base = [sys.executable, offline_vo_script, "--dataset-dir", dataset_dir, "--gt-csv", gt_csv]
 
-    # 1. RAW VO
     print(f"  Running Offline VO: RAW -> {raw_vo_csv}...")
     cmd_raw = cmd_base + ["--output-csv", raw_vo_csv]
     subprocess.run(cmd_raw, check=True)
 
-    # 2. EIS-GATED VO
     print(f"  Running Offline VO: EIS-GATED -> {gated_vo_csv}...")
     cmd_gated = cmd_base + ["--output-csv", gated_vo_csv, "--eis", "--eis-mode", "gated", "--gate-thresh", "15.0"]
     subprocess.run(cmd_gated, check=True)
 
-    # 3. DELAYED-TRI VO
     print(f"  Running Offline VO: DELAYED-TRI -> {dt_vo_csv}...")
     cmd_dt = cmd_base + ["--output-csv", dt_vo_csv, "--eis", "--eis-mode", "gated", "--gate-thresh", "15.0",
                          "--delayed-triangulation", "--r-frame-def", "yaw_rate", "--min-non-r-obs", "3"]
@@ -158,7 +155,7 @@ def record_and_process_batch(target_list, overwrite=False):
         fam = item['family']
         sev = item['severity']
         run_idx = item['run']
-        prefix = item['prefix'] # 'p3' for Core, 'p3x' for Exploratory
+        prefix = item['prefix']
 
         run_id = f"{prefix}_{fam}_L{sev}_R{run_idx}"
         dataset_dir = f"results/datasets/{run_id}"
@@ -172,20 +169,17 @@ def record_and_process_batch(target_list, overwrite=False):
             continue
 
         if overwrite or not os.path.exists(os.path.join(dataset_dir, "dataset_gt.csv")):
-            # Record raw flight dataset
             if os.path.exists(dataset_dir):
                 import shutil
                 shutil.rmtree(dataset_dir)
             record_dataset(family=fam, severity=sev, duration=20.0, run_id=run_id)
 
-        # Verify hard gates
         passed, msg = verify_dataset_hard_gates(dataset_dir, family=fam)
         if not passed:
             print(f"[CRITICAL ERROR] Dataset {run_id} failed hard gate check: {msg}")
             print("Stopping batch run for manual inspection per project protocol.")
             sys.exit(1)
 
-        # Process offline VO
         run_offline_vo_all_mechs(dataset_dir)
 
 
@@ -208,7 +202,7 @@ def main():
         {'family': 'F4', 'severity': 2, 'run': 1, 'prefix': 'p3', 'type': 'core'},
         {'family': 'F4', 'severity': 2, 'run': 2, 'prefix': 'p3', 'type': 'core'},
         {'family': 'F4', 'severity': 2, 'run': 3, 'prefix': 'p3', 'type': 'core'},
-        {'family': 'F6', 'severity': 2, 'run': 1, 'prefix': 'p3', 'type': 'core'}, # Fresh per Amendment 1
+        {'family': 'F6', 'severity': 2, 'run': 1, 'prefix': 'p3', 'type': 'core'},
         {'family': 'F6', 'severity': 2, 'run': 2, 'prefix': 'p3', 'type': 'core'},
         {'family': 'F6', 'severity': 2, 'run': 3, 'prefix': 'p3', 'type': 'core'},
         {'family': 'F10', 'severity': 3, 'run': 1, 'prefix': 'p3', 'type': 'core'},
@@ -230,10 +224,9 @@ def main():
         {'family': 'F7', 'severity': 2, 'run': 2, 'prefix': 'p3x', 'type': 'exploratory'},
         {'family': 'F7', 'severity': 2, 'run': 3, 'prefix': 'p3x', 'type': 'exploratory'},
         {'family': 'F8', 'severity': 2, 'run': 1, 'prefix': 'p3x', 'type': 'exploratory'},
-        {'family': 'F8', 'severity': 2, 'run': 8, 'prefix': 'p3x', 'type': 'exploratory'}, # R2
+        {'family': 'F8', 'severity': 2, 'run': 8, 'prefix': 'p3x', 'type': 'exploratory'},
         {'family': 'F8', 'severity': 2, 'run': 3, 'prefix': 'p3x', 'type': 'exploratory'},
     ]
-    # Correct run index for F8 R2
     exploratory_targets[10]['run'] = 2
 
     targets = []

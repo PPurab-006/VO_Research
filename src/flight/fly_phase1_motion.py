@@ -18,7 +18,7 @@ import sys
 import time
 from pymavlink import mavutil
 
-# Verified Safe Corridor Envelopes in PX4 Local NED Coordinates (Spawn origin = 0,0)
+# Safe corridor envelopes in PX4 Local NED coordinates (Spawn origin = 0,0)
 # Gazebo World corridor X [8, 32], Y [-13, -5] -> Local Y [-6.05, +17.95], Local X [-5.48, +2.52]
 LOCAL_X_MIN, LOCAL_X_MAX = -5.48, 2.52
 LOCAL_Y_MIN, LOCAL_Y_MAX = -6.05, 17.95
@@ -45,7 +45,6 @@ def main():
     print(f"[INFO] Cruise Altitude Z: {alt_z:.2f} m ENU | Planned Duration: {duration:.1f} s")
     print(f"[INFO] Local Geofence Bounds: X[{LOCAL_X_MIN},{LOCAL_X_MAX}] Y[{LOCAL_Y_MIN},{LOCAL_Y_MAX}] Z[{SAFE_Z_MIN},{SAFE_Z_MAX}]")
 
-    # Connect to PX4 SITL MAVLink UDP port
     mav_addr = "udpin:0.0.0.0:14540"
     print(f"Connecting to PX4 via MAVLink at {mav_addr}...")
     master = mavutil.mavlink_connection(mav_addr)
@@ -55,8 +54,7 @@ def main():
     print(f"Heartbeat received! (SysID: {target_sys}, CompID: {target_comp})")
 
     def send_setpoint(x_local, y_local, z_enu, vx=0.0, vy=0.0, vz=0.0, yaw=0.0, yaw_rate=0.0, mask=3576):
-        # MAV_FRAME_LOCAL_NED: +X North, +Y East, +Z Down.
-        # Local origin (0,0) is at spawn location. ENU z -> NED -z.
+        # MAV_FRAME_LOCAL_NED: +X North, +Y East, +Z Down. ENU z -> NED -z.
         master.mav.set_position_target_local_ned_send(
             int(time.time() * 1000) & 0xFFFFFFFF,
             target_sys, target_comp,
@@ -73,21 +71,19 @@ def main():
         r = R.from_euler('xyz', [math.radians(roll_deg), math.radians(pitch_deg), math.radians(yaw_deg)], degrees=False)
         q = r.as_quat() # x, y, z, w
         q_wxyz = [q[3], q[0], q[1], q[2]]
-        # type_mask = 7 (ignore body rates, command quaternion + thrust)
+        # type_mask = 7: ignore body rates, command quaternion + thrust
         master.mav.set_attitude_target_send(
             int(time.time() * 1000) & 0xFFFFFFFF,
             target_sys, target_comp,
             7, q_wxyz, 0.0, 0.0, 0.0, thrust
         )
 
-    # 1. Pre-stream setpoints for 1.5s (Local origin 0,0, alt_z)
     print("[1/4] Pre-streaming OFFBOARD hover setpoints (Local 0, 0, 2.41m) for 1.5s...")
     t0 = time.time()
     while time.time() - t0 < 1.5:
         send_setpoint(0.0, 0.0, alt_z, yaw=0.0, mask=3576)
         time.sleep(0.05)
 
-    # 2. Arm Vehicle
     print("[2/4] Arming vehicle...")
     master.mav.command_long_send(
         target_sys, target_comp,
@@ -96,7 +92,6 @@ def main():
     )
     time.sleep(0.2)
 
-    # 3. Request OFFBOARD Mode
     print("[3/4] Requesting OFFBOARD mode...")
     master.mav.command_long_send(
         target_sys, target_comp,
@@ -105,7 +100,6 @@ def main():
     )
     time.sleep(0.5)
 
-    # 4. TAKEOFF PHASE: Closed-Loop Altitude Readiness State Machine
     print("[EVENT: TAKEOFF_START] Climbing to cruise altitude (2.41m ENU)...")
     takeoff_start_time = time.time()
     takeoff_ready = False
@@ -120,7 +114,6 @@ def main():
             print(f"[EVENT: SAFETY_ABORT] Takeoff timeout ({TAKEOFF_TIMEOUT_SEC}s) reached without achieving 2.0m altitude!")
             break
 
-        # Send takeoff setpoint (Local 0.0, 0.0, 2.41m ENU)
         send_setpoint(0.0, 0.0, alt_z, yaw=0.0, mask=3576)
         msg = master.recv_match(type='LOCAL_POSITION_NED', blocking=False)
         if msg:
@@ -145,7 +138,6 @@ def main():
         master.mav.command_long_send(target_sys, target_comp, mavutil.mavlink.MAV_CMD_NAV_LAND, 0, 0, 0, 0, 0, 0, 0, 0)
         sys.exit(1)
 
-    # 5. ACTIVE MOTION PHASE: Trajectory Clock t=0 Starts NOW
     print(f"\n[EVENT: MOTION_START] Starting motion profile '{family}' (Severity L{severity}) for {duration:.1f}s after TAKEOFF_READY...\n")
     motion_start_time = time.time()  # TRAJECTORY t=0
     sev_factor = severity / 2.0      # L2 = 1.0, L1 = 0.5, L3 = 1.5, L4 = 2.0, L5 = 2.5
@@ -156,34 +148,31 @@ def main():
             print(f"[EVENT: MOTION_END] Motion profile '{family}' completed ({elapsed:.2f}s >= {duration:.1f}s).")
             break
 
-        # Compute trajectory profile targets in PX4 LOCAL coordinates
-        # Map Gazebo +X (Longitudinal) -> PX4 Local +Y_NED (East)
-        # Map Gazebo +Y (Lateral)      -> PX4 Local +X_NED (North)
+        # PX4 Local coordinates: +Y maps to Gazebo +X (longitudinal), +X maps to Gazebo +Y (lateral)
 
-        if family == 'HOVER': # Infrastructure Soak Test Stationary Hover
+        if family == 'HOVER':
             curr_x_local = 0.0
             curr_y_local = 0.0
             curr_z_enu = alt_z
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=0.0, mask=3576)
 
-        elif family == 'F1': # Forward/Backward Translation along Gazebo +X (crop rows)
+        elif family == 'F1':
             v_cruise = 1.5 * sev_factor
             dist = min(v_cruise * elapsed, 14.0)
-            curr_x_local = 0.0         # Lateral (Gazebo Y) holds 0.0
-            curr_y_local = dist        # Longitudinal (Gazebo X) advances 0 -> 14.0m
+            curr_x_local = 0.0
+            curr_y_local = dist
             curr_z_enu = alt_z
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=0.0, mask=3576)
 
-        elif family == 'F2': # F2 Motion (Command PX4 local Y = A * sin(2*pi*f*t), local X = 0 for Gazebo world X variation)
+        elif family == 'F2':
             A_lat = 1.8 * min(sev_factor, 1.25)   # Amplitude A = 1.8m for L2
             f_lat = 0.125                         # Frequency f = 0.125 Hz (8.0s period)
-            curr_x_local = 0.0                                                # Local X (Gazebo Y) holds 0.0m
-            curr_y_local = A_lat * math.sin(2.0 * math.pi * f_lat * elapsed)  # Local Y (Gazebo X) oscillates +/-1.8m
+            curr_x_local = 0.0
+            curr_y_local = A_lat * math.sin(2.0 * math.pi * f_lat * elapsed)
             curr_z_enu = alt_z
-            # Position mask 3576 (0x0DF8): Pos X, Y, Z + Yaw Angle enabled
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=0.0, mask=3576)
 
-        elif family == 'F3': # Vertical Climb / Descend Oscillation
+        elif family == 'F3':
             curr_x_local = 0.0
             curr_y_local = 0.0
             f_z = 0.25
@@ -191,26 +180,26 @@ def main():
             curr_z_enu = alt_z + A_z * math.sin(2.0 * math.pi * f_z * elapsed)
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=0.0, mask=3576)
 
-        elif family == 'F4': # Roll + Translation (Coupled Longitudinal Translation + Dynamic Roll Oscillation)
+        elif family == 'F4':
             v_fwd = 1.0 * sev_factor
-            f_roll = 0.5  # Roll oscillation frequency 0.5 Hz
+            f_roll = 0.5
             A_roll_pos = (0.8 * sev_factor) / (2.0 * math.pi * f_roll)  # 0.2546m amplitude for L2
             curr_y_local = min(v_fwd * elapsed, 14.0) + A_roll_pos * math.sin(2.0 * math.pi * f_roll * elapsed)
             curr_x_local = 0.0
             curr_z_enu = alt_z
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=0.0, mask=3576)
 
-        elif family == 'F5': # Pitch + Translation (Coupled Dynamic Body Pitch Oscillation + Forward Translation)
+        elif family == 'F5':
             v_fwd = 1.0 * sev_factor
             curr_y_local = min(v_fwd * elapsed, 14.0)
-            f_pitch = 0.5  # Pitch oscillation frequency 0.5 Hz
+            f_pitch = 0.5
             A_pitch_pos = (0.6 * sev_factor) / (2.0 * math.pi * f_pitch)  # 0.191m amplitude for L2
             curr_x_local = A_pitch_pos * math.sin(2.0 * math.pi * f_pitch * elapsed)
             curr_z_enu = alt_z
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=0.0, mask=3576)
 
-        elif family == 'F6': # Pure Yaw Oscillation via SET_ATTITUDE_TARGET
-            f_yaw = 0.25  # 0.25 Hz frequency (4.0s period)
+        elif family == 'F6':
+            f_yaw = 0.25
             A_yaw_deg = 30.0
             yaw_target_deg = A_yaw_deg * math.sin(2.0 * math.pi * f_yaw * elapsed)
 
@@ -223,7 +212,7 @@ def main():
 
             send_att_setpoint(roll_deg=0.0, pitch_deg=0.0, yaw_deg=yaw_target_deg, thrust=thrust_cmd)
 
-        elif family == 'F7': # Pitch + Yaw Translation
+        elif family == 'F7':
             v_fwd = 1.0 * sev_factor
             curr_y_local = min(v_fwd * elapsed, 14.0)
             f_pitch = 0.5
@@ -235,7 +224,7 @@ def main():
             yaw_target_rad = math.radians(A_yaw_deg) * math.sin(2.0 * math.pi * f_yaw * elapsed)
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=yaw_target_rad, mask=3576)
 
-        elif family == 'F8': # Roll + Yaw Translation
+        elif family == 'F8':
             v_fwd = 1.0 * sev_factor
             f_roll = 0.5
             A_roll_pos = (0.5 * sev_factor) / (2.0 * math.pi * f_roll)
@@ -247,20 +236,20 @@ def main():
             yaw_target_rad = math.radians(A_yaw_deg) * math.sin(2.0 * math.pi * f_yaw * elapsed)
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=yaw_target_rad, mask=3576)
 
-        elif family == 'F9': # Yaw + Translation (Coupled Forward Translation + Dynamic Yaw Oscillation)
+        elif family == 'F9':
             v_fwd = 1.0 * sev_factor
             curr_y_local = min(v_fwd * elapsed, 14.0)
             curr_x_local = 0.0
             curr_z_enu = alt_z
-            f_yaw = 0.25  # 0.25 Hz frequency (4.0s period)
-            A_yaw_deg = 30.0 * min(sev_factor, 1.0)  # +/-30 degrees amplitude at L2
+            f_yaw = 0.25
+            A_yaw_deg = 30.0 * min(sev_factor, 1.0)  # +/-30 deg amplitude at L2
             yaw_target_rad = math.radians(A_yaw_deg) * math.sin(2.0 * math.pi * f_yaw * elapsed)
             yaw_rate_ff_rad_s = math.radians(A_yaw_deg) * (2.0 * math.pi * f_yaw) * math.cos(2.0 * math.pi * f_yaw * elapsed)
-            # Position + Yaw Angle + Yaw Rate Feedforward mask 504 (0x01F8): Pos X,Y,Z enabled, Yaw & Yaw Rate enabled
+            # mask 504 (0x01F8): Pos X,Y,Z + Yaw + Yaw Rate feedforward enabled
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=yaw_target_rad, yaw_rate=yaw_rate_ff_rad_s, mask=504)
 
-        elif family == 'F10': # Combined Aggressive via SET_ATTITUDE_TARGET
-            f_yaw = 0.50  # 0.50 Hz frequency
+        elif family == 'F10':
+            f_yaw = 0.50
             A_yaw_deg = 20.0
             yaw_target_deg = A_yaw_deg * math.sin(2.0 * math.pi * f_yaw * elapsed)
 
@@ -276,17 +265,13 @@ def main():
 
             send_att_setpoint(roll_deg=roll_cmd_deg, pitch_deg=pitch_cmd_deg, yaw_deg=yaw_target_deg, thrust=thrust_cmd)
 
-        elif family == 'F11': # S-Turns / Lateral Reversals + Forward Progression (Severity Level 2)
-            v_fwd = 1.0                                              # 1.0 m/s forward translation along PX4 local +Y (Gazebo world +X)
-            curr_y_local = min(v_fwd * elapsed, 14.0)               # Local Y setpoint capped at 14.0m to maintain 3.95m margin inside LOCAL_Y_MAX (17.95m)
-            # Lateral S-turn: amplitude 1.0m, f = 0.125 Hz (period 8.0s) along PX4 local +X (Gazebo world +Y)
+        elif family == 'F11':
+            curr_y_local = min(1.0 * elapsed, 14.0)
             curr_x_local = 1.0 * math.sin(2.0 * math.pi * 0.125 * elapsed)
-            curr_z_enu = alt_z                                       # Cruise altitude 2.41m ENU
-            # Position + Yaw mask 2552 (0x0F98): Pos X, Y, Z + Yaw Angle ENABLED
+            curr_z_enu = alt_z
+            # mask 2552 (0x0F98): Pos X, Y, Z + Yaw Angle enabled
             send_setpoint(curr_x_local, curr_y_local, curr_z_enu, yaw=0.0, mask=2552)
 
-
-        # Active Safety Boundary Checks via MAVLink LOCAL_POSITION_NED (ACTIVE_MOTION_PHASE only)
         msg = master.recv_match(type='LOCAL_POSITION_NED', blocking=False)
         if msg:
             px_local, py_local, pz_alt = msg.x, msg.y, -msg.z
@@ -298,7 +283,6 @@ def main():
 
         time.sleep(0.05)
 
-    # 6. Clean Return-to-Hover & Land (Local origin 0, 0, alt_z)
     print("\n[EVENT: RETURN_START] Motion sequence finished. Returning to hover at spawn line (0,0) for 2.0s before landing...")
     final_t0 = time.time()
     while time.time() - final_t0 < 2.0:

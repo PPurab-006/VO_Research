@@ -221,7 +221,6 @@ def main():
     vo_ts = np.array([float(r['timestamp_total_sec']) for r in vo_records])
     gt_ts = np.array([float(r['timestamp_total_sec']) for r in gt_records])
 
-    # Step 2: Timestamp Overlap Check
     overlap_info = check_timestamp_overlap(vo_ts, gt_ts)
 
     print("\n--- 1. TIMESTAMP RANGE OVERLAP CHECK ---")
@@ -238,7 +237,6 @@ def main():
         print("  - Falling back to relative timestamp matching (zero-aligned to start of trajectory) for shape analysis.")
         use_relative_matching = True
 
-    # Step 3: Nearest-Neighbor Timestamp Matching
     matched_vo, matched_gt, gaps_ms = associate_timestamps(
         vo_records, gt_records,
         tolerance_sec=args.tolerance_ms / 1000.0,
@@ -256,7 +254,6 @@ def main():
     print(f"Gap Mean ± StdDev    : {np.mean(gaps_ms):.2f} ms ± {np.std(gaps_ms):.2f} ms")
     print(f"Gap Median           : {np.median(gaps_ms):.2f} ms")
 
-    # Step 4: Normalized Axis Correlation Calculation
     correlations = compute_axis_correlations(matched_vo, matched_gt)
 
     rx = correlations['r']['x']
@@ -268,10 +265,8 @@ def main():
     print(f"  Y-Axis Pearson r : {ry:+.4f}")
     print(f"  Z-Axis Pearson r : {rz:+.4f}")
 
-    # Step 5: Plotting
     plot_correlation(correlations, args.plot_path)
 
-    # Step 6: Summary Flags & Plain-Language Diagnostics
     print("\n" + "=" * 75)
     print("SHAPE CORRELATION DIAGNOSTIC SUMMARY")
     print("=" * 75)

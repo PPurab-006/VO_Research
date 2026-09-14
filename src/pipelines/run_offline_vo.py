@@ -99,7 +99,6 @@ class OfflineVOProcessor:
         self.gt_pos_z = df_gt['pos_z'].values[unique_idx]
 
     def process_frame(self, cv_img, sec, nanosec, total_sec):
-        # Apply EIS derotation if enabled
         cv_img_raw = cv_img
         dt_ms = 0.0
         crop_pct = 0.0
@@ -131,7 +130,6 @@ class OfflineVOProcessor:
             self.telemetry_derotator.prev_R_body = R_body_k
             self.telemetry_derotator.prev_t_sec = total_sec
 
-        # Baseline / Depth ratio computation (for Definition b)
         bd_ratio = 0.0
         if self.gt_times is not None:
             px = float(np.interp(total_sec, self.gt_times, self.gt_pos_x))
@@ -144,7 +142,6 @@ class OfflineVOProcessor:
                 bd_ratio = float(baseline / depth)
             self.prev_gt_pos = curr_gt_pos
 
-        # R-frame detection
         is_r_frame = False
         if self.r_frame_def == 'yaw_rate':
             is_r_frame = (yaw_rate_deg > self.gate_thresh_deg)
@@ -311,7 +308,6 @@ class OfflineVOProcessor:
             if len(err) > 0 and np.sum(status_flat) > 0:
                 mean_lk_err = float(np.mean(err[status_flat]))
 
-            # Promotion logic: if delayed triangulation enabled and frame is NON-R
             if self.delayed_triangulation:
                 if not is_r_frame:
                     for i in range(len(pts2)):
@@ -375,7 +371,6 @@ class OfflineVOProcessor:
 
                         inlier_mask_act = (mask_pose > 0).reshape(-1)
 
-                        # Retain active inliers + all pending features
                         keep_mask = np.zeros(len(pts2), dtype=bool)
                         active_indices = np.where(active_mask)[0]
                         inlier_active_indices = active_indices[inlier_mask_act]
@@ -511,10 +506,6 @@ def main():
         processor.process_frame(cv_img, sec, nanosec, total_sec)
 
     processor.save_csv()
-
-
-if __name__ == '__main__':
-    main()
 
 
 if __name__ == '__main__':

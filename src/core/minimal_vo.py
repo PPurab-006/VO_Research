@@ -59,8 +59,7 @@ class MinimalVO(Node):
         os.makedirs(self.output_dir, exist_ok=True)
         self.csv_path = os.path.join(self.output_dir, output_filename)
 
-        # Camera Intrinsics Matrix K (from Phase 0A verification)
-        # width: 1280, height: 960, fx: 539.9363, fy: 539.9364, cx: 640.0, cy: 480.0
+        # Camera intrinsics from Phase 0A verification (1280x960, fx=fy≈540)
         self.fx = 539.9363327026367
         self.fy = 539.9363708496094
         self.cx = 640.0
@@ -71,47 +70,29 @@ class MinimalVO(Node):
             [0.0,     0.0,     1.0]
         ], dtype=np.float64)
 
-        # Transformation matrix: CV Optical Frame -> Gazebo ENU World Frame
+        # CV Optical Frame -> Gazebo ENU World Frame
         self.R_opt2gaz = np.array([
             [ 0.0,  0.0,  1.0],
             [-1.0,  0.0,  0.0],
             [ 0.0, -1.0,  0.0]
         ], dtype=np.float64)
 
-        # Feature Detectors
         self.orb = cv2.ORB_create(nfeatures=2000, fastThreshold=5)
         self.bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
 
-        # State Variables
         self.bridge = CvBridge() if HAS_CV_BRIDGE else None
         self.prev_img = None
-        self.prev_pts = None   # For KLT mode
-        self.prev_kp = None    # For ORB mode
-        self.prev_des = None   # For ORB mode
+        self.prev_pts = None   # KLT mode
+        self.prev_kp = None    # ORB mode
+        self.prev_des = None   # ORB mode
 
-        # Cumulative World Pose (ENU Frame): Position 3x1, Orientation 3x3 Matrix
         self.curr_pos = np.zeros((3, 1), dtype=np.float64)
         self.curr_rot = np.eye(3, dtype=np.float64)
 
         self.frame_idx = 0
         self.records = []
+        self.frame_history = []  # (timestamp_total_sec, num_inliers)
 
-        # State Variables
-        self.bridge = CvBridge() if HAS_CV_BRIDGE else None
-        self.prev_img = None
-        self.prev_pts = None   # For KLT mode
-        self.prev_kp = None    # For ORB mode
-        self.prev_des = None   # For ORB mode
-
-        # Cumulative World Pose (ENU Frame): Position 3x1, Orientation 3x3 Matrix
-        self.curr_pos = np.zeros((3, 1), dtype=np.float64)
-        self.curr_rot = np.eye(3, dtype=np.float64)
-
-        self.frame_idx = 0
-        self.records = []
-        self.frame_history = []  # History buffer of (timestamp_total_sec, num_inliers)
-
-        # Failure Characterization Variables
         self.consecutive_low_inliers = 0
         self.failure_triggered_streak = False
         self.failure_first_frame_streak = None
@@ -119,7 +100,6 @@ class MinimalVO(Node):
         self.failure_triggered_window = False
         self.failure_first_frame_window = None
 
-        # ROS 2 Publishers
         self.pose_pub = self.create_publisher(PoseStamped, '/vo/pose', 10)
         self.path_pub = self.create_publisher(Path, '/vo/path', 10)
         self.path_msg = Path()
@@ -135,7 +115,6 @@ class MinimalVO(Node):
         if self.frame_idx >= self.max_frames:
             return
 
-        # Convert Image msg to OpenCV Grayscale
         if HAS_CV_BRIDGE:
             try:
                 cv_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='mono8')
@@ -168,7 +147,7 @@ class MinimalVO(Node):
             num_detected, num_matched, num_inliers, num_inliers_E, num_inliers_pose, inlier_ratio, mean_lk_err, num_inliers_H, rel_tx, rel_ty, rel_tz, rel_rot_deg = self._process_orb(cv_img)
             survival_rate = float(num_matched / num_detected) if num_detected > 0 else 0.0
 
-        # Update failure condition 1: Consecutive streak (inlier count < 5 for 10+ consecutive frames)
+        # Failure condition 1: streak of low inliers (< 5 for 10+ consecutive frames)
         if num_inliers < 5:
             self.consecutive_low_inliers += 1
         else:
@@ -182,7 +161,7 @@ class MinimalVO(Node):
                     f"[STREAK FAILURE TRIGGERED] Frame #{self.frame_idx}: num_inliers < 5 for {self.consecutive_low_inliers} consecutive frames!"
                 )
 
-        # Update failure condition 2: Robust 2.0s Sliding Window (>70% of frames in prior 2.0s have num_inliers < 5)
+        # Failure condition 2: sliding 2.0s window (> 70% of frames with num_inliers < 5)
         self.frame_history.append((total_sec, num_inliers))
         win_frames = [item for item in self.frame_history if (total_sec - item[0]) <= 2.0]
         low_inl_count = sum(1 for item in win_frames if item[1] < 5)
@@ -196,11 +175,9 @@ class MinimalVO(Node):
                     f"[WINDOW FAILURE TRIGGERED] Frame #{self.frame_idx}: {window_low_inlier_pct:.1f}% low-inlier frames in 2.0s window!"
                 )
 
-        # Convert rotation matrix to quaternion (x, y, z, w)
         r = R_scipy.from_matrix(self.curr_rot)
         quat_xyzw = r.as_quat()
 
-        # Save frame record for CSV (explicitly separating num_inliers_E and num_inliers_pose)
         record = {
             'frame_idx': self.frame_idx,
             'timestamp_sec': sec,
@@ -215,9 +192,9 @@ class MinimalVO(Node):
             'rot_w': quat_xyzw[3],
             'num_detected': num_detected,
             'num_matched': num_matched,
-            'num_inliers': num_inliers,              # Backward compatibility: num_inliers == num_inliers_E
-            'num_inliers_E': num_inliers_E,          # Essential Matrix RANSAC inliers count
-            'num_inliers_pose': num_inliers_pose,    # recoverPose cheirality/depth inliers count
+            'num_inliers': num_inliers,              # num_inliers == num_inliers_E (backward compat)
+            'num_inliers_E': num_inliers_E,
+            'num_inliers_pose': num_inliers_pose,
             'num_inliers_H': num_inliers_H,
             'inlier_ratio': f"{inlier_ratio:.4f}",
             'feature_survival_rate': f"{survival_rate:.4f}",
@@ -235,7 +212,6 @@ class MinimalVO(Node):
         }
         self.records.append(record)
 
-        # Publish ROS 2 PoseStamped & Path
         pose_msg = PoseStamped()
         pose_msg.header.stamp = msg.header.stamp
         pose_msg.header.frame_id = 'world'
@@ -280,7 +256,6 @@ class MinimalVO(Node):
         rel_rot_deg = 0.0
 
         if self.prev_img is None or self.prev_pts is None or len(self.prev_pts) < 100:
-            # Re-detect Good Features to Track
             pts = cv2.goodFeaturesToTrack(cv_img, maxCorners=2000, qualityLevel=0.001, minDistance=5)
             self.prev_pts = pts
             self.prev_img = cv_img
@@ -289,7 +264,6 @@ class MinimalVO(Node):
 
         num_detected = len(self.prev_pts)
 
-        # Track features via Pyramidal LK Optical Flow
         curr_pts, status, err = cv2.calcOpticalFlowPyrLK(
             self.prev_img, cv_img, self.prev_pts, None,
             winSize=(21, 21), maxLevel=3,
@@ -323,7 +297,6 @@ class MinimalVO(Node):
                         num_inliers_H = 0
 
             if num_matched >= 8:
-                # Estimate Essential Matrix with 5-point RANSAC algorithm
                 E, mask_E = cv2.findEssentialMat(
                     pts1, pts2, self.K,
                     method=cv2.RANSAC,
@@ -336,7 +309,7 @@ class MinimalVO(Node):
                 else:
                     num_inliers_E = 0
 
-                num_inliers = num_inliers_E  # Backward compatibility: num_inliers == num_inliers_E
+                num_inliers = num_inliers_E
                 inlier_ratio = float(num_inliers_E / num_matched) if num_matched > 0 else 0.0
 
                 if E is not None and E.shape == (3, 3):
@@ -351,9 +324,7 @@ class MinimalVO(Node):
                     inliers_count, R_opt, t_opt, mask_pose = res_pose[0], res_pose[1], res_pose[2], res_pose[3]
                     num_inliers_pose = int(inliers_count)
 
-                    # Pose update condition strictly uses recoverPose inliers count as originally specified
                     if num_inliers_pose >= 8:
-                        # Frame Transform: CV Optical -> Gazebo ENU World (negating t_opt to get camera motion vector)
                         R_gaz = self.R_opt2gaz @ R_opt @ self.R_opt2gaz.T
                         t_gaz = - (self.R_opt2gaz @ t_opt)
 
@@ -364,11 +335,9 @@ class MinimalVO(Node):
                         rot_angle_rad = math.acos(max(-1.0, min(1.0, (np.trace(R_gaz) - 1.0) / 2.0)))
                         rel_rot_deg = math.degrees(rot_angle_rad)
 
-                        # Accumulate pose (Unit Scale)
                         self.curr_pos += self.curr_rot @ t_gaz
                         self.curr_rot = self.curr_rot @ R_gaz
 
-                        # Update tracked keypoints for next frame
                         inlier_mask = (mask_pose > 0).reshape(-1)
                         self.prev_pts = pts2[inlier_mask].reshape(-1, 1, 2)
                     else:
@@ -427,7 +396,7 @@ class MinimalVO(Node):
                 else:
                     num_inliers_E = 0
 
-                num_inliers = num_inliers_E  # Backward compatibility: num_inliers == num_inliers_E
+                num_inliers = num_inliers_E
                 inlier_ratio = float(num_inliers_E / num_matched) if num_matched > 0 else 0.0
 
                 if E is not None and E.shape == (3, 3):

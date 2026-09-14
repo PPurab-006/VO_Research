@@ -39,7 +39,6 @@ def get_canonical_active_window(df_gt):
 
     z_gt = df_gt['pos_z'].values.astype(float) if 'pos_z' in df_gt.columns else df_gt['z'].values.astype(float)
 
-    # Cruise altitude Z >= 2.0m window
     idx_active = np.where(z_gt >= 2.0)[0]
     if len(idx_active) > 0:
         start_idx = idx_active[0]
@@ -71,7 +70,6 @@ def analyze_single_run(dataset_dir, raw_csv, eis_csv, gt_csv):
     df_raw_act = df_raw[raw_mask].copy()
     df_eis_act = df_eis[eis_mask].copy()
 
-    # Calculate metrics over active window
     def calc_metrics(df_act, df_all_t):
         if len(df_act) == 0:
             return {}
@@ -111,7 +109,6 @@ def analyze_single_run(dataset_dir, raw_csv, eis_csv, gt_csv):
     m_raw = calc_metrics(df_raw_act, raw_t)
     m_eis = calc_metrics(df_eis_act, eis_t)
 
-    # Compute GT rotation error
     fqx = interp1d(gt_t, df_gt['rot_x'].values, bounds_error=False, fill_value='extrapolate')
     fqy = interp1d(gt_t, df_gt['rot_y'].values, bounds_error=False, fill_value='extrapolate')
     fqz = interp1d(gt_t, df_gt['rot_z'].values, bounds_error=False, fill_value='extrapolate')
@@ -136,7 +133,6 @@ def analyze_single_run(dataset_dir, raw_csv, eis_csv, gt_csv):
         m_raw['rot_err_mean'] = 0.0
         m_eis['rot_err_mean'] = 0.0
 
-    # Calculate Deltas (EIS - RAW)
     delta = {
         'delta_valid_pose_pct': m_eis['valid_pose_pct'] - m_raw['valid_pose_pct'],
         'delta_pose_e_ratio': m_eis['pose_e_ratio'] - m_raw['pose_e_ratio'],
@@ -175,14 +171,12 @@ def run_matrix():
         print(f"PROCESSING RUN: {run_id} ({family} L{severity})")
         print(f"==========================================================================")
 
-        # 1. Record dataset if not present
         if not (os.path.exists(gt_csv) and os.path.exists(cam_csv)):
             print(f"[RECORDING DATASET] Launching flight recording for '{run_id}'...")
             record_dataset(family=family, severity=severity, duration=20.0, run_id=run_id)
         else:
             print(f"[DATASET FOUND] Existing dataset found at '{dataset_dir}'")
 
-        # 2. Run RAW VO if not present
         if not os.path.exists(raw_csv):
             print(f"[RUNNING RAW VO] Processing raw frames for '{run_id}'...")
             proc_raw = OfflineVOProcessor(output_csv_path=raw_csv, mode='klt', eis_derotator=None)
@@ -195,7 +189,6 @@ def run_matrix():
         else:
             print(f"[RAW VO FOUND] '{raw_csv}' already processed.")
 
-        # 3. Run EIS VO if not present
         if not os.path.exists(eis_csv):
             print(f"[RUNNING EIS VO] Processing derotated frames for '{run_id}'...")
             eis_derotator = EISDerotator()
@@ -210,7 +203,6 @@ def run_matrix():
         else:
             print(f"[EIS VO FOUND] '{eis_csv}' already processed.")
 
-        # 4. Analyze A/B metrics
         m_raw, m_eis, delta, active_dur = analyze_single_run(dataset_dir, raw_csv, eis_csv, gt_csv)
         res_entry = {
             'run_id': run_id,

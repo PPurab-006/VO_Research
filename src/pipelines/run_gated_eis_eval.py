@@ -128,7 +128,6 @@ def run_evaluation(gate_thresh=15.0, gate_max=45.0, rerun_gated=True):
         df_gt = pd.read_csv(gt_csv)
         t_start, t_end, active_dur = get_canonical_active_window(df_gt)
 
-        # 1. RAW VO
         if not os.path.exists(raw_csv):
             proc_raw = OfflineVOProcessor(output_csv_path=raw_csv, mode='klt', eis_derotator=None)
             for _, row in df_cam.iterrows():
@@ -137,7 +136,6 @@ def run_evaluation(gate_thresh=15.0, gate_max=45.0, rerun_gated=True):
                 proc_raw.process_frame(cv_img, int(row['timestamp_sec']), int(row['timestamp_nanosec']), float(row['timestamp_total_sec']))
             proc_raw.save_csv()
 
-        # 2. EIS-FIXED VO
         if not os.path.exists(eis_fixed_csv):
             eis_fixed = EISDerotator(reference_mode='fixed')
             eis_fixed.load_attitude_telemetry(gt_csv)
@@ -148,7 +146,6 @@ def run_evaluation(gate_thresh=15.0, gate_max=45.0, rerun_gated=True):
                 proc_fixed.process_frame(cv_img, int(row['timestamp_sec']), int(row['timestamp_nanosec']), float(row['timestamp_total_sec']))
             proc_fixed.save_csv()
 
-        # 3. EIS-INCREMENTAL VO
         if not os.path.exists(eis_inc_csv):
             eis_inc = EISDerotator(reference_mode='incremental')
             eis_inc.load_attitude_telemetry(gt_csv)
@@ -159,7 +156,6 @@ def run_evaluation(gate_thresh=15.0, gate_max=45.0, rerun_gated=True):
                 proc_inc.process_frame(cv_img, int(row['timestamp_sec']), int(row['timestamp_nanosec']), float(row['timestamp_total_sec']))
             proc_inc.save_csv()
 
-        # 4. EIS-NULL VO
         if not os.path.exists(eis_null_csv):
             eis_null = EISDerotator(reference_mode='null')
             eis_null.load_attitude_telemetry(gt_csv)
@@ -170,7 +166,6 @@ def run_evaluation(gate_thresh=15.0, gate_max=45.0, rerun_gated=True):
                 proc_null.process_frame(cv_img, int(row['timestamp_sec']), int(row['timestamp_nanosec']), float(row['timestamp_total_sec']))
             proc_null.save_csv()
 
-        # 5. EIS-GATED VO
         if rerun_gated or not os.path.exists(eis_gated_csv):
             eis_gated = EISDerotator(reference_mode='gated')
             eis_gated.load_attitude_telemetry(gt_csv)
@@ -181,7 +176,6 @@ def run_evaluation(gate_thresh=15.0, gate_max=45.0, rerun_gated=True):
                 proc_gated.process_frame(cv_img, int(row['timestamp_sec']), int(row['timestamp_nanosec']), float(row['timestamp_total_sec']))
             proc_gated.save_csv()
 
-        # 6. EIS-SCALED VO
         if rerun_gated or not os.path.exists(eis_scaled_csv):
             eis_scaled = EISDerotator(reference_mode='scaled')
             eis_scaled.load_attitude_telemetry(gt_csv)
@@ -244,7 +238,6 @@ def main():
 
         print(f"{run_id:<20} | {r_v:7.2f}% | {f_v:7.2f}% | {i_v:7.2f}% | {n_v:7.2f}% | {g_v:7.2f}% | {s_v:7.2f}% | {g_b:7.1f}% | {s_b:7.1f}%")
 
-    # Statistical Aggregation
     f9_runs = ['phase2a_F9_L2_R1', 'phase2a_F9_L2_R2', 'phase2a_F9_L2_R3']
     f5_runs = ['phase2a_F5_L2_R1', 'phase2a_F5_L2_R2', 'phase2a_F5_L2_R3']
 

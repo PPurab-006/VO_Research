@@ -20,7 +20,6 @@ import pandas as pd
 from scipy.spatial.transform import Rotation as R_scipy
 from scipy.spatial.transform import Slerp
 
-# Import evo core API
 from evo.core import trajectory, metrics, sync
 from evo.core import geometry
 
@@ -53,7 +52,6 @@ def evaluate_single_run(vo_csv_path, gt_csv_path):
 
     t_start, t_end, active_dur = get_canonical_active_window(df_gt)
 
-    # Filter VO and GT to active window
     vo_t = df_vo['timestamp_total_sec'].values.astype(float)
     vo_mask = (vo_t >= t_start) & (vo_t <= t_end)
     df_vo_act = df_vo[vo_mask].reset_index(drop=True)
@@ -61,7 +59,6 @@ def evaluate_single_run(vo_csv_path, gt_csv_path):
     if len(df_vo_act) < 10:
         return None
 
-    # Interpolate GT position and orientation at VO timestamps
     gt_t_raw = df_gt['timestamp_total_sec'].values.astype(float)
     gt_t_clean, unique_idx = np.unique(gt_t_raw, return_index=True)
     
@@ -79,31 +76,25 @@ def evaluate_single_run(vo_csv_path, gt_csv_path):
 
     timestamps = df_vo_act['timestamp_total_sec'].values.astype(float)
 
-    # Construct evo PoseTrajectory3D objects
     traj_gt = trajectory.PoseTrajectory3D(positions_xyz=gt_pos, orientations_quat_wxyz=gt_quats_to_wxyz(interp_quats), timestamps=timestamps)
     traj_vo = trajectory.PoseTrajectory3D(positions_xyz=vo_pos, orientations_quat_wxyz=gt_quats_to_wxyz(vo_quats), timestamps=timestamps)
 
-    # Perform Sim(3) Umeyama Scale Alignment
     traj_vo_aligned = copy_trajectory(traj_vo)
     r_mat, t_vec, s_factor = traj_vo_aligned.align(traj_gt, correct_scale=True)
 
-    # 1. ATE RMSE (Sim3 Aligned)
     ape_metric = metrics.APE(metrics.PoseRelation.translation_part)
     ape_metric.process_data((traj_gt, traj_vo_aligned))
     ate_rmse = ape_metric.get_statistic(metrics.StatisticsType.rmse)
 
-    # 2. Translation RPE (m/step) and Scale-Normalized RPE-t (unit-scale)
     rpe_t_metric = metrics.RPE(metrics.PoseRelation.translation_part, delta=1, delta_unit=metrics.Unit.frames)
     rpe_t_metric.process_data((traj_gt, traj_vo_aligned))
     rpe_t_mean = rpe_t_metric.get_statistic(metrics.StatisticsType.mean)
     rpe_t_norm = float(rpe_t_mean / s_factor) if s_factor > 1e-6 else 0.0
 
-    # 3. Rotation RPE (deg/step)
     rpe_r_metric = metrics.RPE(metrics.PoseRelation.rotation_angle_rad, delta=1, delta_unit=metrics.Unit.frames)
     rpe_r_metric.process_data((traj_gt, traj_vo_aligned))
     rpe_r_mean_deg = np.degrees(rpe_r_metric.get_statistic(metrics.StatisticsType.mean))
 
-    # 4. Tracking Loss Rate (%)
     n_pose = df_vo_act['num_inliers_pose'].values.astype(int)
     invalid_mask = (n_pose < 8)
     tracking_loss_pct = (np.sum(invalid_mask) / len(df_vo_act)) * 100.0
@@ -117,10 +108,8 @@ def evaluate_single_run(vo_csv_path, gt_csv_path):
     rpe_t_norm_valid = float(np.mean(rpe_norm_series[step_valid_mask])) if np.sum(step_valid_mask) > 0 else 0.0
     rpe_t_norm_starved = float(np.mean(rpe_norm_series[step_invalid_mask])) if np.sum(step_invalid_mask) > 0 else 0.0
 
-    # 5. Recovery Time (seconds & frames)
     rec_frames, rec_secs = compute_recovery_time(invalid_mask, timestamps)
 
-    # 6. Drift per Meter Traveled (m/m)
     gt_steps = np.linalg.norm(np.diff(gt_pos, axis=0), axis=1)
     gt_path_len = float(np.sum(gt_steps))
     drift_per_meter = float(ate_rmse / gt_path_len) if gt_path_len > 0.1 else 0.0
@@ -174,7 +163,6 @@ def compute_recovery_time(invalid_mask, timestamps):
             in_gap = True
             gap_start_idx = i
         elif not invalid_mask[i] and in_gap:
-            # Recovered!
             gap_len = i - gap_start_idx
             gap_dt = timestamps[i] - timestamps[gap_start_idx]
             recovery_lengths_frames.append(gap_len)

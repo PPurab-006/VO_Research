@@ -26,7 +26,6 @@ def get_canonical_active_window(df_gt):
 
     z_gt = df_gt['pos_z'].values.astype(float) if 'pos_z' in df_gt.columns else df_gt['z'].values.astype(float)
 
-    # Cruise altitude Z >= 2.0m window
     idx_active = np.where(z_gt >= 2.0)[0]
     if len(idx_active) > 0:
         start_idx = idx_active[0]
@@ -115,9 +114,7 @@ def run_evaluation():
         df_gt = pd.read_csv(gt_csv)
         t_start, t_end, active_dur = get_canonical_active_window(df_gt)
 
-        # 1. Process RAW VO if missing
         if not os.path.exists(raw_csv):
-            print(f"[RUNNING RAW VO] Processing raw frames...")
             proc_raw = OfflineVOProcessor(output_csv_path=raw_csv, mode='klt', eis_derotator=None)
             for _, row in df_cam.iterrows():
                 img_path = os.path.join(dataset_dir, 'images', row['filename'])
@@ -125,9 +122,7 @@ def run_evaluation():
                 proc_raw.process_frame(cv_img, int(row['timestamp_sec']), int(row['timestamp_nanosec']), float(row['timestamp_total_sec']))
             proc_raw.save_csv()
 
-        # 2. Process EIS-FIXED VO if missing
         if not os.path.exists(eis_fixed_csv):
-            print(f"[RUNNING EIS-FIXED VO] Processing fixed-reference derotated frames...")
             eis_fixed = EISDerotator(reference_mode='fixed')
             eis_fixed.load_attitude_telemetry(gt_csv)
             proc_fixed = OfflineVOProcessor(output_csv_path=eis_fixed_csv, mode='klt', eis_derotator=eis_fixed)
@@ -137,9 +132,7 @@ def run_evaluation():
                 proc_fixed.process_frame(cv_img, int(row['timestamp_sec']), int(row['timestamp_nanosec']), float(row['timestamp_total_sec']))
             proc_fixed.save_csv()
 
-        # 3. Process EIS-INCREMENTAL VO if missing
         if not os.path.exists(eis_inc_csv):
-            print(f"[RUNNING EIS-INCREMENTAL VO] Processing pairwise incremental derotated frames...")
             eis_inc = EISDerotator(reference_mode='incremental')
             eis_inc.load_attitude_telemetry(gt_csv)
             proc_inc = OfflineVOProcessor(output_csv_path=eis_inc_csv, mode='klt', eis_derotator=eis_inc)
@@ -149,9 +142,7 @@ def run_evaluation():
                 proc_inc.process_frame(cv_img, int(row['timestamp_sec']), int(row['timestamp_nanosec']), float(row['timestamp_total_sec']))
             proc_inc.save_csv()
 
-        # 4. Process EIS-NULL VO if missing
         if not os.path.exists(eis_null_csv):
-            print(f"[RUNNING EIS-NULL VO] Processing null-warp control frames...")
             eis_null = EISDerotator(reference_mode='null')
             eis_null.load_attitude_telemetry(gt_csv)
             proc_null = OfflineVOProcessor(output_csv_path=eis_null_csv, mode='klt', eis_derotator=eis_null)
@@ -161,7 +152,6 @@ def run_evaluation():
                 proc_null.process_frame(cv_img, int(row['timestamp_sec']), int(row['timestamp_nanosec']), float(row['timestamp_total_sec']))
             proc_null.save_csv()
 
-        # Analyze all four
         df_raw = pd.read_csv(raw_csv)
         df_fixed = pd.read_csv(eis_fixed_csv)
         df_inc = pd.read_csv(eis_inc_csv)

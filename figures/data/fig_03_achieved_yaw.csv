@@ -1,0 +1,4 @@
+run_dir,family,yaw_start_deg,mean_heading_offset_deg,yaw_min_deg,yaw_max_deg,peak_to_peak_deg,dominant_freq_hz,gt_rate_p50_degs,gt_rate_p95_degs,gt_rate_max_degs,vo_rate_p50_degs,vo_rate_p95_degs,vo_rate_max_degs,active_window_sec
+p3_F6_L2_R1,F6,-0.89,78.92,-0.89,117.44,118.33,0.223,21.02,96.64,974.86,21.59,93.4,582.26,22.2
+p3_F10_L3_R1,F10,-0.87,90.68,-0.87,126.08,126.95,0.041,34.26,116.25,312.47,36.96,106.59,209.38,23.17
+phase2a_F9_L2_R1,F9,-0.83,83.85,-0.83,119.12,119.96,0.273,29.28,78.99,193.56,31.69,68.31,178.17,23.01

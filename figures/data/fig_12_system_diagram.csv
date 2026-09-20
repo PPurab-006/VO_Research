@@ -1,0 +1,2 @@
+camera_frequency_hz,intrinsic_fx,gating_threshold_degs,ransac_prob,recoverpose_distance_thresh_vo_units,note
+30.3,539.936,15.0,0.999,1000.0,Monocular scale is arbitrary; distanceThresh is specified in VO distance units.

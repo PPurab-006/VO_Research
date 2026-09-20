@@ -27,7 +27,7 @@ log/
 
 # Raw dataset frame images & scratch
 images/
-*.png
+results/datasets/**/*.png
 scratch/
 
 # External large model collections

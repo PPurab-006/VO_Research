@@ -1,0 +1,1 @@
+**Figure 4: F9 EIS derotation progression ladder.** Shows valid pose fraction (%) and ATE RMSE (m) across 5 derotation modes: RAW, FIXED, INCREMENTAL, NULL, and GATED. FIXED mode causes severe tracking loss (62.51% valid vs 93.04% RAW), whereas INCREMENTAL (88.17%), NULL (93.28%), and GATED (92.14%) restore continuity.

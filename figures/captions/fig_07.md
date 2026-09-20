@@ -1,0 +1,1 @@
+**Figure 7: F9 ground-truth vs RAW vs EIS-GATED trajectories across all three runs.** Shows Sim(3)-aligned plan views (XY) over active windows for (a) Run 1 (RAW ATE: 3.10m, GATED ATE: 2.70m), (b) Run 2 (RAW ATE: 3.94m, GATED ATE: 3.01m), and (c) Run 3 (RAW ATE: 2.93m, GATED ATE: 3.36m). All printed ATE values match `per_run_metrics.csv` exactly.

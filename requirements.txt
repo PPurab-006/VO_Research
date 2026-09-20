@@ -1,0 +1,17 @@
+# VO_Research Python Dependencies
+# Pinned to the versions installed in the development environment.
+# Python: 3.14.4
+# Note: matplotlib version in pip is 3.10.7+dfsg1 (Debian/Ubuntu package);
+#       the pip-installable equivalent is 3.10.7.
+# Note: The installed OpenCV version (4.10.0) matches the documented pin.
+#       The offline evaluation (which reads stored CSVs and uses evo, not OpenCV)
+#       reproduced under a different OpenCV build. Sensitivity of the frame-replay
+#       VO to the OpenCV version has not been tested.
+
+evo==1.37.0
+numpy==2.3.5
+scipy==1.18.0
+pandas==3.0.5
+matplotlib==3.10.7
+seaborn==0.13.2
+opencv-python==4.10.0

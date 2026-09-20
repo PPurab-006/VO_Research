@@ -15,6 +15,14 @@ Supports:
 import argparse
 import csv
 import math
+import os
+import sys
+
+import cv2
+import numpy as np
+import pandas as pd
+from scipy.spatial.transform import Rotation as R_scipy
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'core')))
 from eis_preprocessor import EISDerotator
 

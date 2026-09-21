@@ -1,6 +1,6 @@
 .PHONY: all env test analysis figures rerun-vo
 
-all: test analysis figures
+all: analysis figures test
 
 env:
 	pip install -r requirements.txt
@@ -19,3 +19,5 @@ figures:
 rerun-vo:
 	@echo "Rerunning offline VO pipeline across datasets..."
 	python3 src/pipelines/run_phase3_full_eval.py
+	python3 src/analysis/threshold_sweep.py --rerun
+

@@ -15,6 +15,7 @@ Computes per-run and mean +/- std:
 Writes results/analysis/threshold_sweep.csv.
 """
 
+import argparse
 import os
 import sys
 import time
@@ -31,6 +32,7 @@ from evaluate_phase3_evo import get_canonical_active_window, gt_quats_to_wxyz
 
 DATASETS = REPO_ROOT / "results" / "datasets"
 OUTPUT = REPO_ROOT / "results" / "analysis" / "threshold_sweep.csv"
+REPLAYS_DIR = REPO_ROOT / "results" / "analysis" / "threshold_sweep_replays"
 SCRATCH_DIR = REPO_ROOT / "scratch" / "threshold_sweep"
 
 THRESHOLDS = [5.0, 10.0, 15.0, 20.0, 30.0, 45.0]
@@ -104,61 +106,74 @@ def evaluate_trajectory(vo_csv_path, gt_csv_path):
 
 
 def main():
-    SCRATCH_DIR.mkdir(parents=True, exist_ok=True)
+    parser = argparse.ArgumentParser(description="Threshold sweep analysis")
+    parser.add_argument("--rerun", action="store_true", help="Launch offline VO from raw camera frames")
+    args = parser.parse_args()
+
+    REPLAYS_DIR.mkdir(parents=True, exist_ok=True)
     records = []
 
     print("========================================================")
-    print("LAUNCHING THRESHOLD SWEEP (18 RUNS TOTAL)")
+    if args.rerun:
+        print("LAUNCHING THRESHOLD SWEEP (RERUN MODE - 18 RUNS TOTAL)")
+    else:
+        print("EVALUATING COMMITTED THRESHOLD SWEEP REPLAYS (DEFAULT MODE)")
     print("========================================================")
 
     t_start_sweep = time.time()
-    run_counter = 0
+
+    # Pre-read existing runtime_sec if available in default mode
+    prev_runtimes = {}
+    if not args.rerun and OUTPUT.exists():
+        try:
+            df_prev = pd.read_csv(OUTPUT)
+            if "runtime_sec" in df_prev.columns:
+                for _, row in df_prev.iterrows():
+                    prev_runtimes[(float(row["gate_thresh_deg"]), int(row["repeat"]))] = float(row["runtime_sec"])
+        except Exception:
+            pass
 
     for thresh in THRESHOLDS:
         for ds_name, repeat_idx in RUNS:
-            run_counter += 1
             ds_dir = DATASETS / ds_name
             gt_csv = ds_dir / "dataset_gt.csv"
-            out_csv = SCRATCH_DIR / f"gated_thresh_{int(thresh)}_R{repeat_idx}.csv"
+            replay_filename = f"gated_thresh_{int(thresh)}_R{repeat_idx}.csv"
+            replay_csv = REPLAYS_DIR / replay_filename
+            if not replay_csv.exists() and (SCRATCH_DIR / replay_filename).exists():
+                replay_csv = SCRATCH_DIR / replay_filename
 
-            if out_csv.exists():
-                if OUTPUT.exists():
-                    try:
-                        df_prev = pd.read_csv(OUTPUT)
-                        m_row = df_prev[(df_prev["gate_thresh_deg"] == thresh) & (df_prev["repeat"] == repeat_idx)]
-                        t_run = float(m_row["runtime_sec"].iloc[0]) if len(m_row) and "runtime_sec" in m_row.columns else float("nan")
-                    except Exception:
-                        t_run = float("nan")
-                else:
-                    t_run = float("nan")
-            else:
+            if args.rerun:
                 t0 = time.time()
                 cmd = (
                     f"python3 {REPO_ROOT}/src/pipelines/run_offline_vo.py "
                     f"--dataset-dir {ds_dir} "
                     f"--gt-csv {gt_csv} "
-                    f"--output-csv {out_csv} "
+                    f"--output-csv {replay_csv} "
                     f"--eis --eis-mode gated "
                     f"--gate-thresh {thresh} > /dev/null 2>&1"
                 )
                 os.system(cmd)
                 t_run = time.time() - t0
+            else:
+                if not replay_csv.exists():
+                    raise FileNotFoundError(f"Replay file {replay_csv} not found. Run with --rerun or place replay CSVs in {REPLAYS_DIR}")
+                t_run = prev_runtimes.get((thresh, repeat_idx), float("nan"))
 
-            eval_res = evaluate_trajectory(out_csv, gt_csv)
-            print(f" done ({t_run:5.2f}s) | Valid={eval_res['valid_pose_pct']:5.2f}%, ATE={eval_res['ate_rmse']:6.4f}m, normRPE={eval_res['norm_rpe']:6.4f}")
+            eval_res = evaluate_trajectory(replay_csv, gt_csv)
+            runtime_str = f"{t_run:5.2f}s" if not np.isnan(t_run) else " NaN"
+            print(f" thresh={thresh:4.1f} R{repeat_idx} done ({runtime_str}) | Valid={eval_res['valid_pose_pct']:5.2f}%, ATE={eval_res['ate_rmse']:6.4f}m, normRPE={eval_res['norm_rpe']:6.4f}")
 
             records.append({
                 "gate_thresh_deg": thresh,
                 "repeat": repeat_idx,
                 "dataset_run": ds_name,
-                "runtime_sec": round(t_run, 2),
+                "runtime_sec": t_run if np.isnan(t_run) else round(t_run, 2),
                 "valid_pose_pct": float(eval_res["valid_pose_pct"]),
                 "ate_rmse": round(eval_res["ate_rmse"], 4),
                 "scale_factor": round(eval_res["scale_factor"], 6),
                 "meter_rpe": round(eval_res["meter_rpe"], 4),
                 "norm_rpe": round(eval_res["norm_rpe"], 4),
             })
-
 
     t_total = time.time() - t_start_sweep
 
@@ -207,3 +222,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

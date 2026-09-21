@@ -1126,3 +1126,8 @@ This log records all path-string replacements performed during Zenodo repository
 |  | 355 |  |  |
 |  | 356 |  |  |
 |  | 357 |  |  |
+
+## Third-Party Submodule Status
+
+All changes to third-party submodule `configs/gazebo_maps` were reverted (`git -C configs/gazebo_maps checkout -- .`). No third-party files were modified.
+

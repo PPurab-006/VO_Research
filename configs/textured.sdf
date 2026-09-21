@@ -62,7 +62,7 @@
             <specular>0.2 0.2 0.2 1</specular>
             <pbr>
               <metal>
-                <albedo_map>file:///home/purab/Purab/Projects/ROS/configs/textures/ground_texture.png</albedo_map>
+                <albedo_map>../configs/textures/ground_texture.png</albedo_map>
               </metal>
             </pbr>
           </material>
@@ -94,7 +94,7 @@
             <diffuse>1.0 1.0 1.0 1</diffuse>
             <pbr>
               <metal>
-                <albedo_map>file:///home/purab/Purab/Projects/ROS/configs/textures/box_texture.png</albedo_map>
+                <albedo_map>../configs/textures/box_texture.png</albedo_map>
               </metal>
             </pbr>
           </material>
@@ -125,7 +125,7 @@
             <diffuse>1.0 1.0 1.0 1</diffuse>
             <pbr>
               <metal>
-                <albedo_map>file:///home/purab/Purab/Projects/ROS/configs/textures/box_texture.png</albedo_map>
+                <albedo_map>../configs/textures/box_texture.png</albedo_map>
               </metal>
             </pbr>
           </material>
@@ -156,7 +156,7 @@
             <diffuse>1.0 1.0 1.0 1</diffuse>
             <pbr>
               <metal>
-                <albedo_map>file:///home/purab/Purab/Projects/ROS/configs/textures/box_texture.png</albedo_map>
+                <albedo_map>../configs/textures/box_texture.png</albedo_map>
               </metal>
             </pbr>
           </material>
@@ -189,7 +189,7 @@
             <diffuse>1.0 1.0 1.0 1</diffuse>
             <pbr>
               <metal>
-                <albedo_map>file:///home/purab/Purab/Projects/ROS/configs/textures/box_texture.png</albedo_map>
+                <albedo_map>../configs/textures/box_texture.png</albedo_map>
               </metal>
             </pbr>
           </material>

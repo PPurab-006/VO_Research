@@ -121,19 +121,28 @@ def main():
             gt_csv = ds_dir / "dataset_gt.csv"
             out_csv = SCRATCH_DIR / f"gated_thresh_{int(thresh)}_R{repeat_idx}.csv"
 
-            print(f"[{run_counter}/18] Running GATED threshold={thresh:4.1f} deg/s on F9 R{repeat_idx}...", end="", flush=True)
-            t0 = time.time()
-
-            cmd = (
-                f"python3 {REPO_ROOT}/src/pipelines/run_offline_vo.py "
-                f"--dataset-dir {ds_dir} "
-                f"--gt-csv {gt_csv} "
-                f"--output-csv {out_csv} "
-                f"--eis --eis-mode gated "
-                f"--gate-thresh {thresh} > /dev/null 2>&1"
-            )
-            os.system(cmd)
-            t_run = time.time() - t0
+            if out_csv.exists():
+                if OUTPUT.exists():
+                    try:
+                        df_prev = pd.read_csv(OUTPUT)
+                        m_row = df_prev[(df_prev["gate_thresh_deg"] == thresh) & (df_prev["repeat"] == repeat_idx)]
+                        t_run = float(m_row["runtime_sec"].iloc[0]) if len(m_row) and "runtime_sec" in m_row.columns else float("nan")
+                    except Exception:
+                        t_run = float("nan")
+                else:
+                    t_run = float("nan")
+            else:
+                t0 = time.time()
+                cmd = (
+                    f"python3 {REPO_ROOT}/src/pipelines/run_offline_vo.py "
+                    f"--dataset-dir {ds_dir} "
+                    f"--gt-csv {gt_csv} "
+                    f"--output-csv {out_csv} "
+                    f"--eis --eis-mode gated "
+                    f"--gate-thresh {thresh} > /dev/null 2>&1"
+                )
+                os.system(cmd)
+                t_run = time.time() - t0
 
             eval_res = evaluate_trajectory(out_csv, gt_csv)
             print(f" done ({t_run:5.2f}s) | Valid={eval_res['valid_pose_pct']:5.2f}%, ATE={eval_res['ate_rmse']:6.4f}m, normRPE={eval_res['norm_rpe']:6.4f}")
@@ -143,12 +152,13 @@ def main():
                 "repeat": repeat_idx,
                 "dataset_run": ds_name,
                 "runtime_sec": round(t_run, 2),
-                "valid_pose_pct": round(eval_res["valid_pose_pct"], 2),
+                "valid_pose_pct": float(eval_res["valid_pose_pct"]),
                 "ate_rmse": round(eval_res["ate_rmse"], 4),
                 "scale_factor": round(eval_res["scale_factor"], 6),
                 "meter_rpe": round(eval_res["meter_rpe"], 4),
                 "norm_rpe": round(eval_res["norm_rpe"], 4),
             })
+
 
     t_total = time.time() - t_start_sweep
 

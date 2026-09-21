@@ -1,100 +1,45 @@
-#!/usr/bin/env python3
+"""Fig 8 - Delayed triangulation: an apparent RPE improvement that is a tracking-failure artifact.
+For F6, F9, F10 (rotation-heavy families), per-run points (n=3) and mean for EIS-GATED vs DELAYED-TRI:
+ (a) pose validity, (b) scale-normalised RPE over the FULL window, (c) the same RPE split into valid frames and starved frames
+     (starved = num_inliers_pose < 8, where the pose is stale/zero-motion so per-step error is trivially small).
+All values from common.per_run_metrics() (repo evaluate_single_run).
 """
-Fig 8: Delayed Triangulation (DT) Artifact Analysis (F6_L2, F9_L2, F10_L3).
-
-Panel (a): Full-Window Normalized RPE vs Valid-Intersection Normalized RPE for EIS-GATED vs DELAYED-TRI,
-           demonstrating that DT's apparent low overall normRPE is an artifact of severe frame loss.
-Panel (b): Valid Pose Fraction (%) for EIS-GATED vs DELAYED-TRI across active families.
-
-Outputs:
-- figures/out/fig_08_dt_artifact.png
-- figures/out/fig_08_dt_artifact.pdf
-- figures/data/fig_08_dt_artifact.csv
-- figures/captions/fig_08.md
-"""
-
-import sys
-from pathlib import Path
+import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent))
+import numpy as np, pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import seaborn as sns
+import style as S, common as c
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "figures"))
-from style import setup_style, save_fig_and_sidecar, COLOR_GATED, COLOR_ALT, COLOR_GRAY
-
-DT_ARTIFACT_CSV = REPO_ROOT / "results" / "analysis" / "dt_artifact.csv"
-
-def main():
-    setup_style()
-    df_dt = pd.read_csv(DT_ARTIFACT_CSV)
-
-    # Filter active families: F6_L2, F9_L2, F10_L3
-    df_dt["family_clean"] = df_dt["family"].replace({"F6_L2": "F6_L2", "F9_L2": "F9_L2", "F10_L3": "F10_L3"})
-    fam_order = ["F6_L2", "F9_L2", "F10_L3"]
-    df_dt = df_dt[df_dt["family_clean"].isin(fam_order)].copy()
-    df_dt["family_clean"] = pd.Categorical(df_dt["family_clean"], categories=fam_order, ordered=True)
-    df_dt = df_dt.sort_values("family_clean")
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7.0, 3.4))
-
-    # Panel (a): Full-Window vs Valid-Intersection Norm RPE
-    # Group by family and mechanism
-    means_all = df_dt.groupby(["family_clean", "mechanism"])[["rpe_t_norm", "rpe_t_norm_valid"]].mean().reset_index()
-
-    x_positions = np.arange(len(fam_order))
-    width = 0.35
-
-    gated_full = means_all[means_all["mechanism"] == "EIS-GATED"]["rpe_t_norm"].values
-    gated_valid = means_all[means_all["mechanism"] == "EIS-GATED"]["rpe_t_norm_valid"].values
-    dt_full = means_all[means_all["mechanism"] == "DELAYED-TRI"]["rpe_t_norm"].values
-    dt_valid = means_all[means_all["mechanism"] == "DELAYED-TRI"]["rpe_t_norm_valid"].values
-
-    ax1.bar(x_positions - width/2, dt_full, width, label="DT Full-Window NormRPE", color=COLOR_ALT, alpha=0.5, edgecolor="black")
-    ax1.bar(x_positions - width/2, dt_valid, width, label="DT Valid-Frames NormRPE", color=COLOR_ALT, hatch="//", alpha=0.9, edgecolor="black")
-
-    ax1.bar(x_positions + width/2, gated_full, width, label="GATED Full-Window NormRPE", color=COLOR_GATED, alpha=0.5, edgecolor="black")
-    ax1.bar(x_positions + width/2, gated_valid, width, label="GATED Valid-Frames NormRPE", color=COLOR_GATED, hatch="//", alpha=0.9, edgecolor="black")
-
-    ax1.set_xticks(x_positions)
-    ax1.set_xticklabels(fam_order, fontsize=9.0)
-    ax1.set_xlabel("Active Benchmark Family")
-    ax1.set_ylabel("Normalized RPE (unit step error)")
-    ax1.set_title("(a) DT Artifact: Full vs Valid NormRPE", fontsize=9.5)
-    ax1.legend(loc="upper right", fontsize=6.5, frameon=True, facecolor="white", framealpha=0.9)
-    ax1.set_ylim(0, 1.4)
-
-    # Panel (b): Valid Pose Fraction (%) Drop
-    sns.stripplot(data=df_dt, x="family_clean", y="valid_pose_pct", hue="mechanism",
-                  palette={"EIS-GATED": COLOR_GATED, "DELAYED-TRI": COLOR_ALT},
-                  dodge=True, alpha=0.85, jitter=0.12, size=5, ax=ax2)
-
-    means_v = df_dt.groupby(["family_clean", "mechanism"])["valid_pose_pct"].mean().reset_index()
-    for fam_idx, fam in enumerate(fam_order):
-        g_val = means_v[(means_v["family_clean"] == fam) & (means_v["mechanism"] == "EIS-GATED")]["valid_pose_pct"].values[0]
-        dt_val = means_v[(means_v["family_clean"] == fam) & (means_v["mechanism"] == "DELAYED-TRI")]["valid_pose_pct"].values[0]
-        ax2.plot([fam_idx - 0.2, fam_idx + 0.2], [g_val, dt_val], color=COLOR_GRAY, linestyle=":", lw=1.0, zorder=1)
-        ax2.scatter(fam_idx - 0.2, g_val, color=COLOR_GATED, marker="_", s=100, lw=2.5, zorder=3)
-        ax2.scatter(fam_idx + 0.2, dt_val, color=COLOR_ALT, marker="_", s=100, lw=2.5, zorder=3)
-
-    ax2.set_xlabel("Active Benchmark Family")
-    ax2.set_ylabel("Valid Pose Fraction (%)")
-    ax2.set_title("(b) Tracking Loss Penalty (Active Cells)", fontsize=9.5)
-    handles, labels = ax2.get_legend_handles_labels()
-    ax2.legend(handles[:2], labels[:2], loc="lower left", frameon=True, facecolor="white", framealpha=0.9)
-    ax2.set_ylim(30, 100)
-
-    df_sidecar = df_dt.copy()
-
-    caption_md = (
-        "**Figure 8: Delayed Triangulation (DT) metric artifact analysis for F6_L2, F9_L2, and F10_L3.** "
-        "(a) Shows that DT's apparent low overall full-window normalized RPE is an artifact of severe frame loss. "
-        "When evaluated on valid frames alone (`rpe_t_norm_valid`), DT step error is comparable or worse than GATED. "
-        "(b) Tracking validity drops precipitously under DT (e.g. F6_L2 validity falls from 92.3% to 43.0%)."
-    )
-
-    save_fig_and_sidecar(fig, "fig_08_dt_artifact", df_sidecar, caption_md)
-
-if __name__ == "__main__":
-    main()
+df = c.per_run_metrics(); df = df[~df.exploratory]
+FAM = ["F6_L2", "F9_L2", "F10_L3"]
+MEC = [("EIS-GATED", S.GATED_C), ("DELAYED-TRI", S.DT_C)]
+fig, ax = plt.subplots(1, 3, figsize=(S.COL2 + 0.4, 2.9))
+rows = []
+def cell(a, col, fam, mech, i, off, colr, mark="o", fill=True):
+    v = df[(df.family == fam) & (df.mechanism == mech)].sort_values("run")[col].values
+    a.scatter(i + off + np.array([-0.05, 0, 0.05]), v, s=15, color=colr if fill else "white", edgecolor=colr, lw=1.0, marker=mark, zorder=3)
+    a.hlines(v.mean(), i + off - 0.13, i + off + 0.13, color=colr, lw=2, zorder=4)
+    return v
+for i, fam in enumerate(FAM):
+    for k, (mech, colr) in enumerate(MEC):
+        off = (-0.2, 0.2)[k]
+        v1 = cell(ax[0], "valid_pose_pct", fam, mech, i, off, colr)
+        v2 = cell(ax[1], "rpe_t_norm", fam, mech, i, off, colr)
+        v3 = cell(ax[2], "rpe_t_norm_valid", fam, mech, i, off - 0.0, colr, mark="o", fill=True)
+        v4 = cell(ax[2], "rpe_t_norm_starved", fam, mech, i, off, colr, mark="s", fill=False)
+        rows.append(dict(family=fam, mechanism=mech, valid_pct_mean=v1.mean(), rpe_full_mean=v2.mean(), rpe_valid_mean=v3.mean(),
+                         rpe_starved_mean=v4.mean(), **{f"valid_r{r+1}": v1[r] for r in range(3)}, **{f"rpe_full_r{r+1}": v2[r] for r in range(3)}))
+for a, yl, let in zip(ax, ("Pose validity (%)", "Scale-normalised RPE, full window", "Scale-normalised RPE, by frame type"), "abc"):
+    a.set_xticks(range(3)); a.set_xticklabels([f.replace("_L2", "").replace("_L3", "") for f in FAM]); a.set_ylabel(yl, fontsize=8)
+    a.grid(axis="x", visible=False); S.panel(a, let, dx=-0.22)
+ax[0].set_ylim(30, 100)
+ax[1].set_ylim(0, 1.35); ax[2].set_ylim(0, 1.6)
+ax[1].axhline(1.0, color=S.C["grey"], lw=0.6, ls=":"); ax[2].axhline(1.0, color=S.C["grey"], lw=0.6, ls=":")
+h = [plt.Line2D([], [], marker="o", ls="", color=S.GATED_C, label="EIS-GATED"), plt.Line2D([], [], marker="o", ls="", color=S.DT_C, label="DELAYED-TRI")]
+ax[0].legend(handles=h, loc="upper center", bbox_to_anchor=(0.5, -0.16), fontsize=7, ncol=1)
+h2 = [plt.Line2D([], [], marker="o", ls="", color=S.C["black"], label="valid frames (filled)"),
+      plt.Line2D([], [], marker="s", ls="", markerfacecolor="white", color=S.C["black"], label="starved frames (open)")]
+ax[2].legend(handles=h2, loc="upper center", bbox_to_anchor=(0.5, -0.16), fontsize=6.6, ncol=1)
+fig.subplots_adjust(wspace=0.42)
+S.save(fig, "fig_08_dt_artifact")
+out = pd.DataFrame(rows); out.to_csv(S.DATA / "fig_08_dt_artifact.csv", index=False)
+print(out[["family", "mechanism", "valid_pct_mean", "rpe_full_mean", "rpe_valid_mean", "rpe_starved_mean"]].round(3).to_string(index=False))

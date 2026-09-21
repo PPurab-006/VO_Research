@@ -238,6 +238,9 @@ Umeyama Sim(3) alignment solves $s_{{RAW}}^* = 0.091651$ as the UNIQUE global mi
 3. **Verdict for ATE**: Scale factor explanation is **REJECTED** as the driver for ATE improvement. Rescaling RAW by GATED's factor moves ATE in the OPPOSITE direction of GATED's actual improvement.
 4. **Insight**: GATED achieved a lower ATE (2.7015m) IN SPITE OF having a larger scale factor. GATED's true trajectory shape & rotation accuracy was superior enough to overcome the scale expansion penalty.
 
+> [!NOTE]
+> **Audit Correction (2026-09-21)**: As documented in `figures/data/fig_09_scale_artifact.csv` (F9 R1 only), Method 1A (archived test: rescaling RAW after alignment) yields an ATE RMSE of 3.4275 m (`ATE_RAW_rescaled_after_alignment_(method_1A_archived_test)` = 3.4275128141545403). Pre-scaling followed by rigid re-alignment (Method 1B) yields 3.1923 m (`ATE_RAW_prescaled_by_sGATED_rigid_realign_(method_1B)` = 3.1922682471384847). Letting scale re-fit returns the baseline 3.0963 m (`ATE_RAW_prescaled_by_sGATED_scale_refit_(control_equals_RAW)` = 3.0962707182939546). This scale test concerns RPE only and applies strictly to F9 Run 1.
+
 ---
 
 ### Step 3 — Scale Baseline & Statistical Framing
@@ -325,13 +328,34 @@ The apparent RPE 'win' for DELAYED-TRIANGULATION is **CONFIRMED AS A METRIC ARTI
 
 ---
 
+## SECTION D — Corrections, Statistical Reading & Data Provenance
+
+### 1. Correction: Key Synthesis Contradiction
+> **[CORRECTION — 2026-09-20]**: Item 1 of Key Synthesis above incorrectly states that EIS-GATED demonstrates trajectory drift reduction "($3.56\\text{{m}} \\to 3.51\\text{{m}}$ on `F10`)" and scale-normalized per-step error reduction "($1.0119 \\to 0.9582$ on `F10`)". This narrative contradicts Section A's quantitative results table. **Section A's table is authoritative and correct**:
+> - `F10_L3 RAW`: ATE RMSE = **2.1517 +/- 0.4237 m**, scale-normalized RPE = **1.0568 +/- 0.0903**
+> - `F10_L3 EIS-GATED`: ATE RMSE = **2.5335 +/- 0.5908 m**, scale-normalized RPE = **1.1092 +/- 0.0097**
+
+### 2. Statistical Reading (Core Matrix Paired Comparisons)
+Reading directly from `figures/data/fig_06_core_matrix.csv` across all 24 paired comparisons (8 core families $\\times$ 3 metrics):
+- **Exactly 1 comparison out of 24** achieves statistical significance at $p < 0.05$:
+  - `valid_pose_pct` for family `F10_L3` ($p = 0.0327$).
+  - **Direction**: EIS-GATED shows slightly lower valid pose fraction than RAW ($93.47\\%$ vs $94.19\\%$, mean difference $-0.73\\%$).
+- **Remaining 23 comparisons**: None achieve $p < 0.05$ (all $p > 0.10$). No statistically significant difference between RAW and EIS-GATED exists on ATE RMSE or scale-normalized RPE across any of the 8 core families.
+
+### 3. Data Provenance
+Reading directly from `results/analysis/dataset_provenance.csv`:
+- `F5_L2` and `F9_L2` datasets originate from `phase2a_` flight recordings (`phase2a_F5_L2_R1..R3` and `phase2a_F9_L2_R1..R3`).
+- `F1_L2`, `F2_L2`, `F4_L2`, `F6_L2`, `F10_L3`, and `F11_L2` datasets originate from `p3_` flight recordings (`p3_F1_L2_R1..R3`, `p3_F2_L2_R1..R3`, etc.).
+
+---
+
 ## Deliverables & Associated Documents
-- **Exploratory Definitions**: [exploratory_family_definitions.md](file:///home/purab/Purab/Projects/ROS/results/reports/phase3/exploratory_family_definitions.md)
-- **Causal Test Script**: [test_scale_causal.py](file:///home/purab/Purab/Projects/ROS/src/phase2/test_scale_causal.py)
-- **Batch Evaluation Engine**: [run_phase3_full_eval.py](file:///home/purab/Purab/Projects/ROS/src/phase2/run_phase3_full_eval.py)
-- **Recording & Processing Orchestrator**: [record_phase3_datasets.py](file:///home/purab/Purab/Projects/ROS/src/phase2/record_phase3_datasets.py)
-- **Forensic RPE Investigation Script**: [investigate_rpe_starvation_artifact.py](file:///home/purab/.gemini/antigravity-ide/brain/c9b53cbe-4b4d-456a-ab63-bf3b3cb95af3/scratch/investigate_rpe_starvation_artifact.py)
+- **Exploratory Definitions**: [exploratory_family_definitions.md](file://src/results/reports/phase3/exploratory_family_definitions.md)
+- **Causal Test Script**: [test_scale_causal.py](file://src/src/phase2/test_scale_causal.py)
+- **Batch Evaluation Engine**: [run_phase3_full_eval.py](file://src/src/phase2/run_phase3_full_eval.py)
+- **Recording & Processing Orchestrator**: [record_phase3_datasets.py](file://src/src/phase2/record_phase3_datasets.py)
 """
+
 
     with open(report_md_path, "w") as f:
         f.write(content)

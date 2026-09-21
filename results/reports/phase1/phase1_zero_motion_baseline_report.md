@@ -2,7 +2,7 @@
 
 > **Executive Statement**:  
 > This document reports the execution, telemetry analysis, timestamp provenance verification, and metric noise floor qualification of the **Zero-Motion Healthy Baseline** experiment (`HOVER L0`) in `configs/gazebo_maps/agriculture.world`.  
-> - **Execution Mode**: Live SITL flight experiment using repaired infrastructure ([record_ground_truth.py](file:///home/purab/Purab/Projects/ROS/src/record_ground_truth.py), [analyze_phase1_gt.py](file:///home/purab/Purab/Projects/ROS/src/analyze_phase1_gt.py)).  
+> - **Execution Mode**: Live SITL flight experiment using repaired infrastructure ([record_ground_truth.py](../../../src/record_ground_truth.py), [analyze_phase1_gt.py](../../../src/analyze_phase1_gt.py)).  
 > - **Primary Purpose**: Establish the empirical sensor and estimator noise floor ($\mu_{\text{base}}, \sigma_{\text{base}}$) under stationary hover before benchmarking dynamic Phase 1 motion sweeps.
 
 ---
@@ -16,8 +16,8 @@
 | **Target Cruise Pose** | $X_{\text{local}}=0.0\text{m}, Y_{\text{local}}=0.0\text{m}, Z_{\text{ENU}}=2.41\text{m}$ | $Z \approx 2.408\text{m}$ hover altitude achieved |
 | **Commanded Dynamics** | $v_{\text{cmd}} = 0.0\text{ m/s}, \omega_{\text{cmd}} = 0.0^\circ/\text{s}$ (`HOVER L0`) | Zero translation, zero yaw rate |
 | **Target Duration** | $20.0\text{s}$ active measurement window | **$22.22\text{s}$ active cruise duration** |
-| **GT Telemetry Recorder** | Repaired [record_ground_truth.py](file:///home/purab/Purab/Projects/ROS/src/record_ground_truth.py) (`use_sim_time=True`) | **ROS simulation clock domain verified** |
-| **VO Tracking Pipeline** | Unchanged [minimal_vo.py](file:///home/purab/Purab/Projects/ROS/src/minimal_vo.py) (KLT mode) | **ROS simulation clock domain verified** |
+| **GT Telemetry Recorder** | Repaired [record_ground_truth.py](../../../src/record_ground_truth.py) (`use_sim_time=True`) | **ROS simulation clock domain verified** |
+| **VO Tracking Pipeline** | Unchanged [minimal_vo.py](../../../src/minimal_vo.py) (KLT mode) | **ROS simulation clock domain verified** |
 
 ---
 
@@ -100,9 +100,9 @@ Computed over the $22.22\text{s}$ canonical active hover window ($673$ VO frames
 ## 6. Diagnostic Visualizations
 
 The 9-panel diagnostic plot grid generated over the canonical active-motion window is saved in:
-- **Baseline Diagnostic Plot Grid**: [phase1_zero_motion_baseline_diagnostics.png](file:///home/purab/Purab/Projects/ROS/plots/phase1_zero_motion_baseline_diagnostics.png)
+- **Baseline Diagnostic Plot Grid**: [phase1_zero_motion_baseline_diagnostics.png](../../../plots/phase1_zero_motion_baseline_diagnostics.png)
 
-![Zero-Motion Baseline Diagnostics](file:///home/purab/Purab/Projects/ROS/plots/phase1_zero_motion_baseline_diagnostics.png)
+![Zero-Motion Baseline Diagnostics](../../../plots/phase1_zero_motion_baseline_diagnostics.png)
 
 Panel Breakdown:
 1. **GT Position Jitter**: Displays millimeter-level $X, Y, Z$ position stabilization around hover origin.
@@ -142,7 +142,7 @@ FINAL QUALIFICATION STATUS: BASELINE QUALIFIED
 ## Artifacts Generated
 
 - **Baseline Data Files**:
-  - GT CSV: [phase1_pilot_HOVER_L0_gt.csv](file:///home/purab/Purab/Projects/ROS/results/phase1_pilot_HOVER_L0_gt.csv)
-  - VO CSV: [phase1_pilot_HOVER_L0_vo.csv](file:///home/purab/Purab/Projects/ROS/results/phase1_pilot_HOVER_L0_vo.csv)
-- **Baseline Report**: [phase1_zero_motion_baseline_report.md](file:///home/purab/Purab/Projects/ROS/results/phase1_zero_motion_baseline_report.md)
-- **Diagnostic Plot**: [phase1_zero_motion_baseline_diagnostics.png](file:///home/purab/Purab/Projects/ROS/plots/phase1_zero_motion_baseline_diagnostics.png)
+  - GT CSV: [phase1_pilot_HOVER_L0_gt.csv](../../../results/phase1_pilot_HOVER_L0_gt.csv)
+  - VO CSV: [phase1_pilot_HOVER_L0_vo.csv](../../../results/phase1_pilot_HOVER_L0_vo.csv)
+- **Baseline Report**: [phase1_zero_motion_baseline_report.md](../../../results/phase1_zero_motion_baseline_report.md)
+- **Diagnostic Plot**: [phase1_zero_motion_baseline_diagnostics.png](../../../plots/phase1_zero_motion_baseline_diagnostics.png)

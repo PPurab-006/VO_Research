@@ -15,7 +15,7 @@ import pandas as pd
 import numpy as np
 
 def main():
-    csv_path = '/home/purab/Purab/Projects/ROS/results/collision_test_run1.csv'
+    csv_path = 'src/results/collision_test_run1.csv'
     if not os.path.exists(csv_path):
         print(f"Error: {csv_path} does not exist.")
         sys.exit(1)

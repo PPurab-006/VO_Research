@@ -1,130 +1,64 @@
-#!/usr/bin/env python3
+"""Fig 6 - Eight core families, RAW vs EIS-GATED, three metrics, paired per run (n=3).
+Lines join the same run under the two mechanisms. k = runs (of 3) where EIS-GATED is better.
+p = paired t-test; the n=3 Wilcoxon p can only take the values 0.25/0.5/0.75/1.0, so it is not annotated.
+All statistics come from common.paired(); no test is computed in this script.
 """
-Fig 6: Primary Core Matrix Comparison (8 Core Families, 24 Runs Total).
-
-3 rows of subplots:
-- Row 1: Tracking Continuity (Valid Pose Fraction %)
-- Row 2: Trajectory Accuracy (ATE RMSE in meters)
-- Row 3: Scale-Invariant Step Error (Normalized RPE)
-
-Paired lines connecting RAW and GATED for each run (n=3 per family).
-Annotated with k/3 (runs GATED is better) and Wilcoxon p-value from paired_stats.csv.
-phase2a_ cells (F5_L2 and F9_L2) are explicitly marked with asterisks (*).
-
-Outputs:
-- figures/out/fig_06_core_matrix.png
-- figures/out/fig_06_core_matrix.pdf
-- figures/data/fig_06_core_matrix.csv
-- figures/captions/fig_06.md
-"""
-
-import sys
-from pathlib import Path
+import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent))
+import numpy as np, pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
+import style as S, common as c
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "figures"))
-from style import setup_style, save_fig_and_sidecar, COLOR_RAW, COLOR_GATED, COLOR_GRAY
+df = c.per_run_metrics()
+core = df[~df.exploratory]
+FAM = c.CORE
+METRICS = [("valid_pose_pct", "Pose validity (%)", "a"), ("ate_rmse", "ATE RMSE (m)", "b"),
+           ("rpe_t_norm", "Scale-normalised RPE", "c")]
+phase2a = {f for f in FAM if c.source_of(f, 1) == "phase2a"}
+ga = []
+for fam_, expl_ in [(f, False) for f in c.CORE] + [(f, True) for f in c.EXPLORATORY]:
+    n_, b_ = c.gate_bypass_stats(fam_, expl_); ga.append(dict(family=fam_, exploratory=expl_, active_frames=n_, frames_bypassed=b_, pct_bypassed=100.0 * b_ / n_))
+GA = pd.DataFrame(ga); GA.to_csv(S.DATA / "fig_06_gate_activity.csv", index=False)
+byp = {r.family: r.pct_bypassed for r in GA.itertuples()}
 
-PER_RUN_CSV = REPO_ROOT / "results" / "analysis" / "per_run_metrics.csv"
-PAIRED_CSV = REPO_ROOT / "results" / "analysis" / "paired_stats.csv"
+fig, axes = plt.subplots(3, 1, figsize=(S.COL2, 7.0), sharex=True)
+rows = []
+for ax, (met, ylab, let) in zip(axes, METRICS):
+    ylo, yhi = np.inf, -np.inf
+    for i, fam in enumerate(FAM):
+        p = c.paired(df, fam, met)
+        for r in range(3):
+            ax.plot([i - 0.14, i + 0.14], [p["raw"][r], p["gated"][r]], color=S.C["grey"], lw=0.7, alpha=0.7, zorder=2)
+        ax.scatter(np.full(3, i - 0.14), p["raw"], s=20, color=S.RAW_C, zorder=3, edgecolor="white", lw=0.3)
+        ax.scatter(np.full(3, i + 0.14), p["gated"], s=20, color=S.GATED_C, zorder=3, edgecolor="white", lw=0.3)
+        ax.hlines(p["raw"].mean(), i - 0.26, i - 0.02, color=S.RAW_C, lw=2, zorder=4)
+        ax.hlines(p["gated"].mean(), i + 0.02, i + 0.26, color=S.GATED_C, lw=2, zorder=4)
+        ylo = min(ylo, p["raw"].min(), p["gated"].min()); yhi = max(yhi, p["raw"].max(), p["gated"].max())
+        rows.append(dict(metric=met, family=fam, source=c.source_of(fam, 1), k_gated_better=p["k"],
+                         paired_t_p=p["t_p"], wilcoxon_p=p["w_p"], mean_diff_gated_minus_raw=p["mean_diff"],
+                         **{f"raw_r{r+1}": p["raw"][r] for r in range(3)}, **{f"gated_r{r+1}": p["gated"][r] for r in range(3)}))
+    span = yhi - ylo
+    ax.set_ylim(ylo - 0.08 * span, yhi + 0.30 * span)
+    top = yhi + 0.06 * span
+    for i, fam in enumerate(FAM):
+        r_ = [x for x in rows if x["metric"] == met and x["family"] == fam][0]
+        star = "*" if r_["paired_t_p"] < 0.05 else ""
+        ax.text(i, top, f"{r_['k_gated_better']}/3\np={r_['paired_t_p']:.2f}{star}", ha="center", va="bottom", fontsize=6.6,
+                color=(S.C["black"] if not star else S.C["vermilion"]), fontweight=("bold" if star else "normal"))
+    ax.set_ylabel(ylab); S.panel(ax, let, dx=-0.09); ax.grid(axis="x", visible=False)
+    if met == "rpe_t_norm":
+        ax.axhline(1.0, color=S.C["grey"], lw=0.6, ls=":")
 
-CORE_FAMILIES = ["F1_L2", "F2_L2", "F4_L2", "F5_L2*", "F6_L2", "F9_L2*", "F10_L3", "F11_L2"]
-CORE_FAMILIES_RAW = ["F1_L2", "F2_L2", "F4_L2", "F5_L2", "F6_L2", "F9_L2", "F10_L3", "F11_L2"]
-
-def main():
-    setup_style()
-    df_per_run = pd.read_csv(PER_RUN_CSV)
-    df_paired = pd.read_csv(PAIRED_CSV)
-
-    fig, axes = plt.subplots(3, 1, figsize=(7.0, 7.5), sharex=True)
-    ax_valid, ax_ate, ax_rpe = axes
-
-    df_core = df_per_run[df_per_run["mechanism"].isin(["RAW", "EIS-GATED"])].copy()
-
-    x_positions = np.arange(len(CORE_FAMILIES))
-
-    # Metric configurations: (axis, metric_column, y_label, title, is_higher_better)
-    metrics_config = [
-        (ax_valid, "valid_pose_pct", "Valid Pose Fraction (%)", "(a) Tracking Continuity (Valid Pose %)", True),
-        (ax_ate, "ate_rmse", "ATE RMSE (m)", "(b) Trajectory Accuracy (ATE RMSE)", False),
-        (ax_rpe, "rpe_t_norm", "Normalized RPE (unit step err)", "(c) Scale-Invariant Step Error (Normalized RPE)", False),
-    ]
-
-    for ax, metric_col, ylabel, title, higher_better in metrics_config:
-        for x_idx, (fam_clean, fam_raw) in enumerate(zip(CORE_FAMILIES, CORE_FAMILIES_RAW)):
-            df_fam = df_core[df_core["family"] == fam_raw]
-            
-            # Fetch paired stats
-            p_sub = df_paired[(df_paired["family"] == fam_raw) & (df_paired["metric"] == metric_col)]
-            if not p_sub.empty:
-                k_better = p_sub["n_gated_better"].values[0]
-                p_val = p_sub["paired_t_p"].values[0]
-                stat_str = f"k={k_better}/3\np={p_val:.4f}"
-            else:
-                stat_str = ""
-
-            # Plot paired lines for runs 1, 2, 3
-            for r in [1, 2, 3]:
-                r_raw = df_fam[(df_fam["run"] == r) & (df_fam["mechanism"] == "RAW")]
-                r_gated = df_fam[(df_fam["run"] == r) & (df_fam["mechanism"] == "EIS-GATED")]
-                
-                if not r_raw.empty and not r_gated.empty:
-                    val_raw = r_raw[metric_col].values[0]
-                    val_gated = r_gated[metric_col].values[0]
-
-                    # Offset positions for paired points
-                    x_r = x_idx - 0.15
-                    x_g = x_idx + 0.15
-                    
-                    line_color = COLOR_GATED if (val_gated > val_raw if higher_better else val_gated < val_raw) else COLOR_RAW
-                    ax.plot([x_r, x_g], [val_raw, val_gated], color=line_color, alpha=0.5, lw=1.1)
-                    ax.scatter(x_r, val_raw, color=COLOR_RAW, s=25, zorder=3)
-                    ax.scatter(x_g, val_gated, color=COLOR_GATED, s=25, zorder=3)
-
-            # Family mean bars / indicators
-            m_raw = df_fam[df_fam["mechanism"] == "RAW"][metric_col].mean()
-            m_gated = df_fam[df_fam["mechanism"] == "EIS-GATED"][metric_col].mean()
-            ax.scatter(x_idx - 0.15, m_raw, color=COLOR_RAW, marker="_", s=140, lw=3.0, zorder=4)
-            ax.scatter(x_idx + 0.15, m_gated, color=COLOR_GATED, marker="_", s=140, lw=3.0, zorder=4)
-
-            # Annotate k/3 and p-value above family
-            y_max_fam = max(df_fam[metric_col].max(), m_raw, m_gated)
-            y_offset = (ax.get_ylim()[1] - ax.get_ylim()[0]) * 0.08 if ax.get_ylim()[1] > 0 else 0.1
-            ax.text(x_idx, y_max_fam + y_offset * 0.15, stat_str, ha="center", va="bottom", fontsize=7.0, color="#333333", weight="bold")
-
-        ax.set_ylabel(ylabel)
-        ax.set_title(title, fontsize=9.5)
-
-    ax_rpe.set_xticks(x_positions)
-    ax_rpe.set_xticklabels(CORE_FAMILIES, fontsize=9.0, weight="bold")
-    ax_rpe.set_xlabel("Core Benchmark Families (* indicates phase2a_ provenance)", fontsize=9.5)
-
-    # Global legend
-    ax_valid.scatter([], [], color=COLOR_RAW, s=30, label="RAW Run (n=3)")
-    ax_valid.scatter([], [], color=COLOR_GATED, s=30, label="EIS-GATED Run (n=3)")
-    ax_valid.scatter([], [], color=COLOR_RAW, marker="_", s=100, lw=2.5, label="RAW Family Mean")
-    ax_valid.scatter([], [], color=COLOR_GATED, marker="_", s=100, lw=2.5, label="EIS-GATED Family Mean")
-    ax_valid.legend(loc="lower left", fontsize=7.5, ncol=2, frameon=True, facecolor="white", framealpha=0.9)
-
-    plt.tight_layout()
-
-    # Save sidecar CSV
-    df_sidecar = df_paired[df_paired["family"].isin(CORE_FAMILIES_RAW)].copy()
-    
-    caption_md = (
-        "**Figure 6: Primary 8-core matrix paired comparison.** "
-        "Shows (a) valid pose fraction (%), (b) ATE RMSE (m), and (c) normalized RPE for RAW vs EIS-GATED "
-        "across all 24 core runs (8 families $\\times$ 3 repeats). Each run is connected by a paired line. "
-        "Each family is annotated with $k/3$ (number of runs GATED improves over RAW) and paired t-test $p$-value read from `paired_stats.csv` "
-        "(e.g., F9 ATE $p=0.5304$, F10 ATE $p=0.1527$; discrete Wilcoxon rank-sum values $0.75$/$0.25$ arise from $n=3$ discrete rank combinations). "
-        "Asterisks (*) mark `phase2a_` dataset provenance (F5_L2* and F9_L2*)."
-    )
-
-    save_fig_and_sidecar(fig, "fig_06_core_matrix", df_sidecar, caption_md)
-
-
-if __name__ == "__main__":
-    main()
+axes[-1].set_xticks(range(len(FAM)))
+axes[-1].set_xticklabels([f.replace("_L2", "").replace("_L3", "") + ("†" if f in phase2a else "") + f"\n({byp[f]:.0f}%)" for f in FAM])
+axes[-1].set_xlabel("Motion family   (in brackets: % of frames on which the gate bypasses derotation)")
+h = [plt.Line2D([], [], marker="o", ls="", color=S.RAW_C, label="RAW (each dot = one run)"),
+     plt.Line2D([], [], marker="o", ls="", color=S.GATED_C, label="EIS-GATED (each dot = one run)"),
+     plt.Line2D([], [], color=S.C["grey"], lw=0.8, label="same run, paired")]
+axes[0].legend(handles=h, loc="upper left", ncol=3, fontsize=7, bbox_to_anchor=(0.0, 1.32))
+fig.subplots_adjust(hspace=0.16, top=0.94)
+S.save(fig, "fig_06_core_matrix")
+out = pd.DataFrame(rows); out.to_csv(S.DATA / "fig_06_core_matrix.csv", index=False)
+sig = out[out.paired_t_p < 0.05]
+print("phase2a families (†):", sorted(phase2a))
+print("comparisons with paired-t p<0.05 (of", len(out), "):"); print(sig[["metric","family","k_gated_better","paired_t_p","mean_diff_gated_minus_raw"]].round(4).to_string(index=False))
+print("F9 ATE:", out[(out.metric=="ate_rmse")&(out.family=="F9_L2")][["k_gated_better","paired_t_p"]].round(4).values.tolist())

@@ -16,9 +16,9 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from pymavlink import mavutil
 
-WORLD_DIR = "/home/purab/Purab/Projects/ROS/configs/gazebo_maps/exploration_complex"
+WORLD_DIR = str(Path(__file__).resolve().parents[3] / "configs" / "gazebo_maps")
 WORLD_NAME = "in_and_out_vis"
-PX4_DIR = "/home/purab/PX4-Autopilot"
+PX4_DIR = os.environ.get("PX4_DIR", str(Path.home() / "PX4-Autopilot"))
 MODEL = "gz_x500_mono_cam"
 SPAWN_POSE = "15.0,15.0,0.2,0,0,0"
 
@@ -56,7 +56,7 @@ def main():
     os.makedirs("results", exist_ok=True)
     kill_sim()
 
-    maps_base = "/home/purab/Purab/Projects/ROS/configs/gazebo_maps"
+    maps_base = "src/configs/gazebo_maps"
     common_models = f"{maps_base}/common_models"
     
     env = os.environ.copy()

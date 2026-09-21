@@ -1,8 +1,8 @@
 # Diagnostic Research Report: Essential Matrix Inlier Collapse & Translational Baseline Analysis (10° Roll Validation)
 
 **Dataset Analyzed**:
-- [`results/roll_validation_vo.csv`](file:///home/purab/Purab/Projects/ROS/results/roll_validation_vo.csv) (1,231 VO frame records with diagnostic telemetry)
-- [`results/roll_validation_telemetry.csv`](file:///home/purab/Purab/Projects/ROS/results/roll_validation_telemetry.csv) (1,530 PX4 high-frequency vehicle telemetry records)
+- [`results/roll_validation_vo.csv`](../../../results/roll_validation_vo.csv) (1,231 VO frame records with diagnostic telemetry)
+- [`results/roll_validation_telemetry.csv`](../../../results/roll_validation_telemetry.csv) (1,530 PX4 high-frequency vehicle telemetry records)
 
 ---
 
@@ -111,7 +111,7 @@ To isolate the root cause of low Essential Matrix inliers, we compare three dist
 
 ## 7. Summary & Recommended Next Step
 
-* **Files Analyzed**: [`results/roll_validation_vo.csv`](file:///home/purab/Purab/Projects/ROS/results/roll_validation_vo.csv), [`results/roll_validation_telemetry.csv`](file:///home/purab/Purab/Projects/ROS/results/roll_validation_telemetry.csv)
+* **Files Analyzed**: [`results/roll_validation_vo.csv`](../../../results/roll_validation_vo.csv), [`results/roll_validation_telemetry.csv`](../../../results/roll_validation_telemetry.csv)
 * **Key Numerical Finding**: 64.6% of frames show `num_inliers < 5` AND `num_inliers_H >= 500` despite `num_matched > 1800` and `mean_lk_err < 2.1 px`.
 * **Strongest Interpretation**: VO failure in 10° roll flight is a **purely geometric Essential Matrix estimator degeneracy** caused by low per-frame baseline-to-depth parallax (0.62%), **NOT** a KLT feature tracking failure.
 * **Unresolved Question**: Can model-selection fallback (Homography $H$ decomposition for rotation) resolve VO trajectory tracking during attitude maneuvers?

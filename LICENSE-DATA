@@ -1,0 +1,21 @@
+Creative Commons Attribution 4.0 International Public License (CC BY 4.0)
+
+Copyright (c) 2026 Purab Sen
+
+This license applies to all benchmark data, datasets, analysis outputs, documentation,
+reports, figures, plots, and sidecar CSVs contained within the following directories of
+this repository:
+  - results/
+  - docs/
+  - figures/
+  - plots/
+
+You are free to:
+  - Share — copy and redistribute the material in any medium or format
+  - Adapt — remix, transform, and build upon the material for any purpose, even commercially.
+
+Under the following terms:
+  - Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+
+Full legal text reference:
+  https://creativecommons.org/licenses/by/4.0/legalcode

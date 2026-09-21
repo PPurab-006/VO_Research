@@ -9,8 +9,8 @@ import sys
 import time
 import subprocess
 
-WORLD_DIR = "/home/purab/Purab/Projects/ROS/configs/gazebo_maps"
-PX4_DIR = "/home/purab/PX4-Autopilot"
+WORLD_DIR = str(Path(__file__).resolve().parents[3] / "configs" / "gazebo_maps")
+PX4_DIR = os.environ.get("PX4_DIR", str(Path.home() / "PX4-Autopilot"))
 MODEL = "gz_x500_mono_cam"
 SPAWN_POSE = "0,0,0.1076,0,0,1.570796"
 
@@ -28,7 +28,7 @@ def main():
     kill_all()
 
     maps_base = WORLD_DIR
-    collection_models = "/home/purab/Purab/Projects/ROS/configs/gazebo_models_worlds_collection-master/models"
+    collection_models = "src/configs/gazebo_models_worlds_collection-master/models"
     common_models = f"{maps_base}/common_models"
     world_path = f"{maps_base}/drone_race_track_2018_actual_with_gatepapers.world"
 

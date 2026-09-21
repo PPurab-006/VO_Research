@@ -74,7 +74,7 @@ ROS/
 
 ## Primary Document References
 
-- **Phase 3 Controlled Experiment Report**: [results/reports/phase3/phase3_controlled_experiment_report.md](file:///home/purab/Purab/Projects/ROS/results/reports/phase3/phase3_controlled_experiment_report.md)
-- **Master Failure Log & Technical Journal**: [docs/failure_log.md](file:///home/purab/Purab/Projects/ROS/docs/failure_log.md)
-- **Research Methodology**: [docs/methodology.md](file:///home/purab/Purab/Projects/ROS/docs/methodology.md)
-- **Environment Setup**: [docs/environment.md](file:///home/purab/Purab/Projects/ROS/docs/environment.md)
+- **Phase 3 Controlled Experiment Report**: [results/reports/phase3/phase3_controlled_experiment_report.md](results/reports/phase3/phase3_controlled_experiment_report.md)
+- **Master Failure Log & Technical Journal**: [docs/failure_log.md](docs/failure_log.md)
+- **Research Methodology**: [docs/methodology.md](docs/methodology.md)
+- **Environment Setup**: [docs/environment.md](docs/environment.md)

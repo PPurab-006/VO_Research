@@ -32,7 +32,7 @@ OpenCV's `cv2.recoverPose()` normalizes translation to unit vector length ($\|\h
 
 ## 3. New Metric Semantics
 
-The VO pipeline in [src/minimal_vo.py](file:///home/purab/Purab/Projects/ROS/src/minimal_vo.py) has been updated with strict metric separation:
+The VO pipeline in [src/minimal_vo.py](../../../src/minimal_vo.py) has been updated with strict metric separation:
 
 1. **`num_inliers_E`**:
    The exact count of entries in `mask_E` equal to 1 returned directly by `cv2.findEssentialMat()`:
@@ -58,7 +58,7 @@ Conflating these metrics hid the fact that `findEssentialMat()` was succeeding m
 
 ## 5. Synthetic Regression Test Results
 
-Test File: [tests/test_essential_matrix_bookkeeping.py](file:///home/purab/Purab/Projects/ROS/tests/test_essential_matrix_bookkeeping.py)
+Test File: [tests/test_essential_matrix_bookkeeping.py](../../../tests/test_essential_matrix_bookkeeping.py)
 
 Command: `python3 -m unittest tests/test_essential_matrix_bookkeeping.py`
 

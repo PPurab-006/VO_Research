@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 
-output_dir = "/home/purab/Purab/Projects/ROS/configs/textures"
+output_dir = "configs/configs/textures"
 os.makedirs(output_dir, exist_ok=True)
 
 # 1. Ground Texture (512 x 512) - High-contrast Checkerboard + High-Frequency Grid & Noise (~25 KB)

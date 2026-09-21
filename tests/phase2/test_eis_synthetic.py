@@ -258,7 +258,7 @@ class TestEISSynthetic(unittest.TestCase):
         that fixed mode exhibits under large cumulative yaw.
         """
         import os
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'core'))
         from eis_derotation import EISDerotator
 
         eis_fixed = EISDerotator(reference_mode='fixed')
@@ -282,13 +282,13 @@ class TestEISSynthetic(unittest.TestCase):
         R_body_60 = R_scipy.from_euler('z', yaw_60, degrees=True).as_matrix()
 
         # Fixed Mode Homography for Frame 60 (relative to Frame 0 reference)
-        H_fixed = eis_fixed.compute_homography(R_body_60, reference_mode='fixed')
+        H_fixed, _, _ = eis_fixed.compute_homography(R_body_60, reference_mode='fixed')
         crop_pct_fixed = eis_fixed.compute_crop_percentage(H_fixed)
         warp_angle_fixed = eis_fixed.compute_warp_angle(H_fixed)
 
         # Incremental Mode Homography for Frame 60 (relative to Frame 59 reference)
         eis_inc.prev_R_body = R_body_59
-        H_inc = eis_inc.compute_homography(R_body_60, reference_mode='incremental')
+        H_inc, _, _ = eis_inc.compute_homography(R_body_60, reference_mode='incremental')
         crop_pct_inc = eis_inc.compute_crop_percentage(H_inc)
         warp_angle_inc = eis_inc.compute_warp_angle(H_inc)
 

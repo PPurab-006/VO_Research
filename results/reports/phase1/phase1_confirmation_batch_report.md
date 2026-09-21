@@ -141,7 +141,7 @@ To measure intra-family replication consistency, we compute descriptive differen
 
 ### Graphical Diagnostic: Replicate Comparisons
 
-![Replicate Comparisons](file:///home/purab/Purab/Projects/ROS/plots/confirmation_replicate_comparison.png)
+![Replicate Comparisons](../../../plots/confirmation_replicate_comparison.png)
 
 ---
 
@@ -152,7 +152,7 @@ The central hypothesis tested in this confirmation batch was:
 
 ### Sequence Diagnostic Plot
 
-![Batch Index Sequence](file:///home/purab/Purab/Projects/ROS/plots/confirmation_batch_sequence.png)
+![Batch Index Sequence](../../../plots/confirmation_batch_sequence.png)
 
 ### Key Observations
 1. **No Monotonic Degradation**: As shown in the chronological batch-index plot, VO support metrics do **not** decrease continuously from run 1 to run 21.
@@ -169,7 +169,7 @@ The central hypothesis tested in this confirmation batch was:
 
 To evaluate whether VO support degrades during the execution of a single 20-second flight profile, the active window of each run was divided into four equal temporal quartiles ($Q_1: 0-25\%$, $Q_2: 25-50\%$, $Q_3: 50-75\%$, $Q_4: 75-100\%$).
 
-![Within-Run Temporal Dynamics](file:///home/purab/Purab/Projects/ROS/plots/confirmation_within_run_temporal.png)
+![Within-Run Temporal Dynamics](../../../plots/confirmation_within_run_temporal.png)
 
 ### Findings
 - Across all pure translational and coupled translational runs (F1, F2, F11), the Essential Matrix inlier ratio remained at $\ge 99.5\%$ throughout all four quartiles ($Q_1 \rightarrow Q_4$).
@@ -181,7 +181,7 @@ To evaluate whether VO support degrades during the execution of a single 20-seco
 
 To ensure that observed differences between trajectory families are not misattributed to algorithmic breakdown, we evaluated VO performance against ground-truth kinetic covariates.
 
-![Motion Covariates](file:///home/purab/Purab/Projects/ROS/plots/confirmation_motion_covariates.png)
+![Motion Covariates](../../../plots/confirmation_motion_covariates.png)
 
 ### Confounds Accounted For
 1. **Zero Parallax Degeneracy (`HOVER L0`)**: In stationary hover, physical translation $v \approx 0.05\text{ m/s}$ produces sub-pixel optical flow ($v_{\text{px}} \approx 0.84\text{ px/fr}$). Triangulation depth filtering rejects parallel epipolar rays, resulting in a low valid pose update rate ($53\%$) despite high Essential Matrix inlier ratios ($99.9\%$).

@@ -33,4 +33,8 @@ scratch/
 # External large model collections
 configs/gazebo_models_worlds_collection-master/
 
+# Cached per-run metrics in figure package
+figures/data/_per_run_metrics.csv
+
+
 

@@ -1,2 +1,8 @@
-camera_frequency_hz,intrinsic_fx,gating_threshold_degs,ransac_prob,recoverpose_distance_thresh_vo_units,note
-30.3,539.936,15.0,0.999,1000.0,Monocular scale is arbitrary; distanceThresh is specified in VO distance units.
+item,value
+camera_rate_hz_measured,30.303030303029153
+median_frame_dt_ms,33.00000000000125
+image_width,1280.0
+image_height,960.0
+gate_threshold_deg_per_s,15.0
+recoverPose_distanceThresh_vo_units,1000.0
+validity_min_inliers,8.0

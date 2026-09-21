@@ -51,7 +51,7 @@ $$\boldsymbol{\omega}_{\text{body}} = \frac{\text{rotvec}(R_{\text{body}}(t_{k-1
 
 ## 2. Six-Way Evaluation Matrix (Canonical Active Window $Z \ge 2.0\text{m}$)
 
-Evaluated across all 7 datasets using [run_gated_eis_eval.py](file:///home/purab/Purab/Projects/ROS/src/run_gated_eis_eval.py):
+Evaluated across all 7 datasets using [run_gated_eis_eval.py](../../../src/run_gated_eis_eval.py):
 
 | Dataset Run | RAW Val (%) | FIX Val (%) | INC Val (%) | NUL Val (%) | GAT Val (%) | SCL Val (%) | GAT Byp (%) | SCL Byp (%) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |

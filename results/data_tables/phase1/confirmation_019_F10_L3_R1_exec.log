@@ -1,6 +1,6 @@
 [INFO] [1788625339.959610654] [live_ground_truth_recorder]: Subscribing to LIVE ground-truth pose topic: '/world/default/dynamic_pose/info'
 [INFO] [1788625339.960045505] [live_ground_truth_recorder]: Target model: 'x500_mono_cam_0' | Max samples: 3000
-[INFO] [1788625339.960387364] [live_ground_truth_recorder]: Saving output to: '/home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_gt.csv'
+[INFO] [1788625339.960387364] [live_ground_truth_recorder]: Saving output to: '../../../results/confirmation_019_F10_L3_R1_gt.csv'
 [INFO] [1788625339.960661686] [live_ground_truth_recorder]: Timestamp Domain: Enforced ROS simulation time (use_sim_time=True via /clock)
 [INFO] [1788625340.114614246] [live_ground_truth_recorder]: [1] LIVE GT Stamp (Sim): 6.671 s | Pos: (14.0294, -7.5605, -0.1068) m | Quat(xyzw): (0.0140, -0.0082, -0.0094, 0.9998)
 [INFO] [1788625341.825036414] [live_ground_truth_recorder]: [100] LIVE GT Stamp (Sim): 8.253 s | Pos: (14.0294, -7.5605, -0.1068) m | Quat(xyzw): (0.0140, -0.0082, -0.0094, 0.9998)
@@ -19,7 +19,7 @@ Connecting to PX4 via MAVLink at udpin:0.0.0.0:14540...
 [[539.9363327    0.         640.        ]
  [  0.         539.93637085 480.        ]
  [  0.           0.           1.        ]]
-[INFO] [1788625342.469129655] [minimal_vo]: Output directory: '/home/purab/Purab/Projects/ROS/results'
+[INFO] [1788625342.469129655] [minimal_vo]: Output directory: '../../../results'
 [WARN] [1788625342.628862449] [minimal_vo]: [WINDOW FAILURE TRIGGERED] Frame #0: 100.0% low-inlier frames in 2.0s window!
 
 ======================================================================
@@ -27,7 +27,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 1 (Achieved FPS: 0.00 Hz over 0.00s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -53,7 +53,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 26 (Achieved FPS: 31.52 Hz over 0.82s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -78,7 +78,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 51 (Achieved FPS: 30.91 Hz over 1.65s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -103,7 +103,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 76 (Achieved FPS: 30.71 Hz over 2.47s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -127,7 +127,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 101 (Achieved FPS: 30.61 Hz over 3.30s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -150,7 +150,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 126 (Achieved FPS: 30.55 Hz over 4.12s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -174,7 +174,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 151 (Achieved FPS: 30.51 Hz over 4.95s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -197,7 +197,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 176 (Achieved FPS: 30.48 Hz over 5.77s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -221,7 +221,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 201 (Achieved FPS: 30.45 Hz over 6.60s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -245,7 +245,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 226 (Achieved FPS: 30.44 Hz over 7.42s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -270,7 +270,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 251 (Achieved FPS: 30.42 Hz over 8.25s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -294,7 +294,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 276 (Achieved FPS: 30.41 Hz over 9.08s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -317,7 +317,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 301 (Achieved FPS: 30.40 Hz over 9.90s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -343,7 +343,7 @@ INTERMEDIATE METRICS SUMMARY:
 LIVE GROUND-TRUTH RECORDING COMPLETE
 ======================================================================
 Total Live Samples Logged : 918
-Output CSV Path           : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_gt.csv
+Output CSV Path           : ../../../results/confirmation_019_F10_L3_R1_gt.csv
 ======================================================================
 
 
@@ -352,7 +352,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 313 (Achieved FPS: 30.40 Hz over 10.30s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -374,7 +374,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 313 (Achieved FPS: 30.40 Hz over 10.30s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/confirmation_019_F10_L3_R1_vo.csv
+Output CSV Path        : ../../../results/confirmation_019_F10_L3_R1_vo.csv
 Streak Failure (Old)   : False (First at Frame #None)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -390,9 +390,9 @@ INTERMEDIATE METRICS SUMMARY:
   LK Tracking Error (Mean): Mean = 0.6435 px, Max = 3.7875 px
 ======================================================================
 
-/home/purab/Purab/Projects/ROS/src/analyze_phase1_gt.py:281: RuntimeWarning: invalid value encountered in divide
+../../../src/analyze_phase1_gt.py:281: RuntimeWarning: invalid value encountered in divide
   e_ratio = np.where(matched > 0, num_E / matched, 0.0)
-/home/purab/Purab/Projects/ROS/src/analyze_phase1_gt.py:282: RuntimeWarning: invalid value encountered in divide
+../../../src/analyze_phase1_gt.py:282: RuntimeWarning: invalid value encountered in divide
   pose_e_ratio = np.where(num_E > 0, num_pose / num_E, 0.0)
 ==========================================================================
 PHASE 1 PILOT RUN ANALYSIS REPORT:  (F10 Level L3)

@@ -1,7 +1,7 @@
 # Phase 1 Baseline Provenance Reconciliation Report
 
 > **Executive Conclusion**:  
-> The discrepancy between the published HOVER L0 baseline report ([phase1_zero_motion_baseline_report.md](file:///home/purab/Purab/Projects/ROS/results/phase1_zero_motion_baseline_report.md)) and direct recomputation from the raw telemetry CSVs is **100% mathematically reconciled and explained**.  
+> The discrepancy between the published HOVER L0 baseline report ([phase1_zero_motion_baseline_report.md](../../../results/phase1_zero_motion_baseline_report.md)) and direct recomputation from the raw telemetry CSVs is **100% mathematically reconciled and explained**.  
 > - **Primary Root Cause 1 (Window Offset Bug)**: `scratch/analyze_baseline_hover.py` computed active window offsets relative to the GT series start ($t_0 = 5.607\text{s}$) rather than matching ROS simulation time directly. This shifted the 673-frame evaluation window forward by $+1.289\text{s}$ (evaluating sim time $17.590\text{s} - 39.766\text{s}$ instead of $16.301\text{s} - 38.519\text{s}$), capturing 22 takeoff/climb frames while missing the end of hover.  
 > - **Primary Root Cause 2 (Population Inclusion Policy)**: The published report calculated central tendency metrics across **all active frames** (assigning Pose/E $= 0.0$ on zero-inlier frames), yielding Pose/E mean $= 0.2720$ and feature velocity mean $= 0.7656\text{ px/fr}$. Recomputations that filtered non-zero pose frames ($N_{\text{pose}} > 0$) or valid pose frames ($N_{\text{pose}} \ge 8$) yielded Pose/E mean $= 0.3782 - 0.4575$, feature velocity mean $= 0.8956 - 1.118\text{ px/fr}$, and frame rotation error mean $= 0.1791^\circ - 0.195^\circ$.  
 > - **Resolution**: The canonical Phase 1 metric pipeline is now explicitly defined and frozen.
@@ -10,20 +10,20 @@
 
 ## 1. Files & Artifacts Inspected
 
-1. **Published Report**: [results/phase1_zero_motion_baseline_report.md](file:///home/purab/Purab/Projects/ROS/results/phase1_zero_motion_baseline_report.md)
-2. **Raw Ground Truth CSV**: [results/phase1_pilot_HOVER_L0_gt.csv](file:///home/purab/Purab/Projects/ROS/results/phase1_pilot_HOVER_L0_gt.csv)
-3. **Raw Visual Odometry CSV**: [results/phase1_pilot_HOVER_L0_vo.csv](file:///home/purab/Purab/Projects/ROS/results/phase1_pilot_HOVER_L0_vo.csv)
-4. **Analysis Engine**: [src/analyze_phase1_gt.py](file:///home/purab/Purab/Projects/ROS/src/analyze_phase1_gt.py)
-5. **Report Generation Script**: [scratch/analyze_baseline_hover.py](file:///home/purab/Purab/Projects/ROS/scratch/analyze_baseline_hover.py)
-6. **Diagnostic Reconciliation Script**: [scratch/reconcile_hover_provenance.py](file:///home/purab/Purab/Projects/ROS/scratch/reconcile_hover_provenance.py)
-7. **Table Generator Script**: [scratch/build_reconciliation_table.py](file:///home/purab/Purab/Projects/ROS/scratch/build_reconciliation_table.py)
+1. **Published Report**: [results/phase1_zero_motion_baseline_report.md](../../../results/phase1_zero_motion_baseline_report.md)
+2. **Raw Ground Truth CSV**: [results/phase1_pilot_HOVER_L0_gt.csv](../../../results/phase1_pilot_HOVER_L0_gt.csv)
+3. **Raw Visual Odometry CSV**: [results/phase1_pilot_HOVER_L0_vo.csv](../../../results/phase1_pilot_HOVER_L0_vo.csv)
+4. **Analysis Engine**: [src/analyze_phase1_gt.py](../../../src/analyze_phase1_gt.py)
+5. **Report Generation Script**: [scratch/analyze_baseline_hover.py](../../../scratch/analyze_baseline_hover.py)
+6. **Diagnostic Reconciliation Script**: [scratch/reconcile_hover_provenance.py](../../../scratch/reconcile_hover_provenance.py)
+7. **Table Generator Script**: [scratch/build_reconciliation_table.py](../../../scratch/build_reconciliation_table.py)
 
 ---
 
 ## 2. Published vs. Current Recomputation Provenance
 
 ### Published Baseline Provenance (Method A)
-- Produced by [scratch/analyze_baseline_hover.py](file:///home/purab/Purab/Projects/ROS/scratch/analyze_baseline_hover.py).
+- Produced by [scratch/analyze_baseline_hover.py](../../../scratch/analyze_baseline_hover.py).
 - Applied relative elapsed time from GT series start:
   - GT start $t_0 = 5.607\text{s}$. Altitude $Z \ge 2.0\text{m}$ reached at $t_{\text{start}} = 16.301\text{s}$ and ended at $t_{\text{end}} = 38.519\text{s}$.
   - Calculated `start_rel = 16.301 - 5.607 = 10.694s`, `end_rel = 38.519 - 5.607 = 32.912s`.
@@ -126,9 +126,9 @@ For all future Phase 1 baseline and sweep characterizations, the following canon
 
 ## 9. Final Reconciliation Deliverables & Status
 
-- **Reconciliation Report**: [results/phase1_baseline_provenance_reconciliation.md](file:///home/purab/Purab/Projects/ROS/results/phase1_baseline_provenance_reconciliation.md)
-- **Reconciliation Script**: [scratch/reconcile_hover_provenance.py](file:///home/purab/Purab/Projects/ROS/scratch/reconcile_hover_provenance.py)
-- **Table Generator**: [scratch/build_reconciliation_table.py](file:///home/purab/Purab/Projects/ROS/scratch/build_reconciliation_table.py)
+- **Reconciliation Report**: [results/phase1_baseline_provenance_reconciliation.md](../../../results/phase1_baseline_provenance_reconciliation.md)
+- **Reconciliation Script**: [scratch/reconcile_hover_provenance.py](../../../scratch/reconcile_hover_provenance.py)
+- **Table Generator**: [scratch/build_reconciliation_table.py](../../../scratch/build_reconciliation_table.py)
 
 ---
 

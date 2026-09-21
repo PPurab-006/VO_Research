@@ -15,7 +15,7 @@ import signal
 
 YAW_RATES = [10, 20, 40, 80, 120, 180]
 WORLD_NAME = "boxworld_obstacles_tight"
-PX4_DIR = "/home/purab/PX4-Autopilot"
+PX4_DIR = os.environ.get("PX4_DIR", str(Path.home() / "PX4-Autopilot"))
 MODEL = "gz_x500_mono_cam"
 
 

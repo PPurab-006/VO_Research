@@ -18,8 +18,8 @@ import numpy as np
 FLIGHT_PATHS = {
     'v1': {
         'name': 'v1 (textured.sdf)',
-        'gt': '/home/purab/Purab/Projects/ROS/results/ground_truth_textured_circular.csv',
-        'vo': '/home/purab/Purab/Projects/ROS/results/vo_trajectory_textured_circular.csv',
+        'gt': 'src/results/ground_truth_textured_circular.csv',
+        'vo': 'src/results/vo_trajectory_textured_circular.csv',
         'world': 'textured.sdf',
         'center': '(5.5, 0.0) m',
         'radius': '4.5 m',
@@ -27,8 +27,8 @@ FLIGHT_PATHS = {
     },
     'v2': {
         'name': 'v2 (textured.sdf)',
-        'gt': '/home/purab/Purab/Projects/ROS/results/circular_flight_v2_gt.csv',
-        'vo': '/home/purab/Purab/Projects/ROS/results/circular_flight_v2_vo.csv',
+        'gt': 'src/results/circular_flight_v2_gt.csv',
+        'vo': 'src/results/circular_flight_v2_vo.csv',
         'world': 'textured.sdf',
         'center': '(6.0, 1.0) m',
         'radius': '4.0 m',
@@ -36,8 +36,8 @@ FLIGHT_PATHS = {
     },
     'v3': {
         'name': 'v3 original (boxworld_tight)',
-        'gt': '/home/purab/Purab/Projects/ROS/results/circular_flight_v3_gt.csv',
-        'vo': '/home/purab/Purab/Projects/ROS/results/circular_flight_v3_vo.csv',
+        'gt': 'src/results/circular_flight_v3_gt.csv',
+        'vo': 'src/results/circular_flight_v3_vo.csv',
         'world': 'boxworld_tight',
         'center': '(5.0, 5.0) m',
         'radius': '6.0 m',
@@ -45,8 +45,8 @@ FLIGHT_PATHS = {
     },
     'v3_rerun': {
         'name': 'v3-rerun post-GPU (boxworld_tight)',
-        'gt': '/home/purab/Purab/Projects/ROS/results/circular_flight_v3_rerun_gt.csv',
-        'vo': '/home/purab/Purab/Projects/ROS/results/circular_flight_v3_rerun_vo.csv',
+        'gt': 'src/results/circular_flight_v3_rerun_gt.csv',
+        'vo': 'src/results/circular_flight_v3_rerun_vo.csv',
         'world': 'boxworld_tight',
         'center': '(5.0, 5.0) m',
         'radius': '6.0 m',

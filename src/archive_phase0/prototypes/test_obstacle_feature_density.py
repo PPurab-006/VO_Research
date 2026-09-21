@@ -124,7 +124,7 @@ def run_test():
     print("PRE-FLIGHT CHECK: OBSTACLE CLUSTER FEATURE DENSITY & TRACKABILITY")
     print("==========================================================================")
 
-    artifact_dir = '/home/purab/.gemini/antigravity-ide/brain/f1001f09-4342-47f8-a77f-1447d8011198'
+    artifact_dir = None
     camera_topic = '/world/boxworld_obstacles_tight/model/x500_mono_cam_0/link/camera_link/sensor/camera/image'
 
     rclpy.init()

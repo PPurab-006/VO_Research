@@ -14,7 +14,7 @@
 
 ## 1. Step 1 — Offline Feedforward Math Validation (PASSED)
 
-Before flying `R3`, the commanded setpoint sequence was simulated offline for the full $20.0\text{s}$ duration ($dt = 0.05\text{s}$, 20 Hz) using [validate_feedforward_math.py](file:///home/purab/Purab/Projects/ROS/scratch/validate_feedforward_math.py):
+Before flying `R3`, the commanded setpoint sequence was simulated offline for the full $20.0\text{s}$ duration ($dt = 0.05\text{s}$, 20 Hz) using [validate_feedforward_math.py](../../../scratch/validate_feedforward_math.py):
 
 - **Commanded Yaw Target**: $\psi(t) = A_{\text{yaw}} \sin(2\pi f_{\text{yaw}} t)$ ($A_{\text{yaw}} = 30.0^\circ$, $f_{\text{yaw}} = 0.25\text{ Hz}$)
 - **Analytical Yaw Rate Feedforward**: $\dot{\psi}(t) = 2\pi f_{\text{yaw}} A_{\text{yaw}} \cos(2\pi f_{\text{yaw}} t)$ ($\dot{\psi}_{\text{peak}} = 47.1239\text{ deg/s}$)

@@ -97,6 +97,9 @@ Maneuver Interval: $1788543517.683\text{ s}$ to $1788543537.680\text{ s}$ (Durat
 | **Valid Pose Rate (`>= 8`)** | **18.60%** | **90.43%** | **+71.83% increase** in usable pose updates. |
 | **Strict 2.0s Window Failure** | **TRUE** (100% low inliers) | **FALSE** (14.52% max low inliers) | Rejection artifact completely cleared. |
 
+> [!NOTE]
+> **Audit Correction (2026-09-21)**: The 18.60% -> 90.43% valid pose rate comparison figure exists only as report text and is not reproducible from committed datasets. In `results/data_tables/experiments/roll_validation_vo.csv`, `num_inliers` equals `num_inliers_E` on every frame (1261 / 1261 frames, fraction = 1.0000). Thus, no old-threshold real-flight measurement was committed. Synthetic results remain fully reproducible.
+
 ---
 
 ## 6. Strict Sliding Window Failure Criterion Results

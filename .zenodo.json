@@ -1,0 +1,22 @@
+{
+  "title": "Benchmark Evaluation of Electronic Image Stabilization and De-rotation Gating in Monocular Visual Odometry",
+  "description": "This repository provides a simulation-based benchmark evaluation of electronic image stabilization (EIS) and yaw-rate de-rotation gating in monocular visual odometry. Across 24 core matrix flight comparisons (n=3), EIS-GATED did not significantly improve trajectory accuracy over RAW, while a recoverPose depth-filter configuration failure under small baselines was identified and repaired. Code MIT; data, figures and documents CC BY 4.0",
+  "creators": [
+    {
+      "name": "Sen, Purab",
+      "orcid": "0009-0002-8385-1435",
+      "affiliation": "Independent researcher"
+    }
+  ],
+  "license": "mit",
+  "upload_type": "software",
+  "keywords": [
+    "monocular visual odometry",
+    "UAV",
+    "electronic image stabilization",
+    "negative results",
+    "PX4",
+    "Gazebo",
+    "reproducibility"
+  ]
+}

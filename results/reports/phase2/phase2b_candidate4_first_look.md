@@ -3,7 +3,7 @@
 > [!WARNING]
 > **OFF-SPEC / CORRECTION NOTICE**  
 > The `phase2b_candidate4_L2_R1` flight evaluated in this initial report suffered from a trajectory setpoint mask bug that caused monotonic yaw drift ($+118.46^\circ$) instead of the intended $\pm 30.0^\circ$ oscillation. The findings below are **OFF-SPEC / UNREPRESENTATIVE**.  
-> See [phase2b_candidate4_corrected_report.md](file:///home/purab/Purab/Projects/ROS/results/phase2b_candidate4_corrected_report.md) for the root cause analysis and Step 2 HARD GATE audit.
+> See [phase2b_candidate4_corrected_report.md](../../../results/phase2b_candidate4_corrected_report.md) for the root cause analysis and Step 2 HARD GATE audit.
 
 **Author**: Antigravity Assistant & Visual Navigation Lead  
 **Date**: September 11, 2026  
@@ -52,7 +52,7 @@ The achieved yaw trajectory successfully exceeded the target $\pm 30^\circ$ swee
 
 ## 2. RAW vs. EIS-GATED Evaluation Matrix
 
-Evaluated using [run_candidate4_eval.py](file:///home/purab/Purab/Projects/ROS/src/run_candidate4_eval.py) over canonical active window ($Z \ge 2.0\text{m}$):
+Evaluated using [run_candidate4_eval.py](../../../src/run_candidate4_eval.py) over canonical active window ($Z \ge 2.0\text{m}$):
 
 | Processing Mode | Active Frames | Pose Validity (%) | Pose / Essential Ratio | Feature Survival Rate | Mean LK Residual (px) | Gate Bypass Rate (%) | Net Effect vs RAW |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |

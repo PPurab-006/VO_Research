@@ -17,11 +17,11 @@
 
 ## 1. Inspection of Existing Analysis Infrastructure
 
-A detailed forensic review of the source execution scripts ([minimal_vo.py](file:///home/purab/Purab/Projects/ROS/src/minimal_vo.py), [fly_phase1_motion.py](file:///home/purab/Purab/Projects/ROS/src/fly_phase1_motion.py), [run_phase1_trajectory.py](file:///home/purab/Purab/Projects/ROS/src/run_phase1_trajectory.py), [analyze_phase1_gt.py](file:///home/purab/Purab/Projects/ROS/src/analyze_phase1_gt.py), and [record_ground_truth.py](file:///home/purab/Purab/Projects/ROS/src/record_ground_truth.py)) revealed critical structural, temporal, and coordinate frame inconsistencies:
+A detailed forensic review of the source execution scripts ([minimal_vo.py](../../../src/minimal_vo.py), [fly_phase1_motion.py](../../../src/fly_phase1_motion.py), [run_phase1_trajectory.py](../../../src/run_phase1_trajectory.py), [analyze_phase1_gt.py](../../../src/analyze_phase1_gt.py), and [record_ground_truth.py](../../../src/record_ground_truth.py)) revealed critical structural, temporal, and coordinate frame inconsistencies:
 
 1. **Timestamp Clock Disconnect**:
-   - **Ground-Truth Telemetry ([record_ground_truth.py](file:///home/purab/Purab/Projects/ROS/src/record_ground_truth.py))**: Logged wall-clock Unix time ($\sim 1.788 \times 10^9\text{ s}$) because Gazebo TFMessage header timestamps were unpopulated ($0, 0$), triggering a fallback to `time.time()`.
-   - **Visual Odometry ([minimal_vo.py](file:///home/purab/Purab/Projects/ROS/src/minimal_vo.py))**: Logged Gazebo ROS simulation time ($t_{\text{sim}} \approx 6.6\text{s} - 45.5\text{s}$) via camera image topic headers with `use_sim_time: True`.
+   - **Ground-Truth Telemetry ([record_ground_truth.py](../../../src/record_ground_truth.py))**: Logged wall-clock Unix time ($\sim 1.788 \times 10^9\text{ s}$) because Gazebo TFMessage header timestamps were unpopulated ($0, 0$), triggering a fallback to `time.time()`.
+   - **Visual Odometry ([minimal_vo.py](../../../src/minimal_vo.py))**: Logged Gazebo ROS simulation time ($t_{\text{sim}} \approx 6.6\text{s} - 45.5\text{s}$) via camera image topic headers with `use_sim_time: True`.
    - *Impact*: Direct row-by-row timestamp matching fails; alignment must use relative elapsed time ($\Delta t$) anchored to takeoff completion.
 
 2. **Sampling Rate & Dispatch Jitter**:
@@ -149,7 +149,7 @@ The audit uncovered the root cause of the previously reported $P03$ and $P04$ at
    - $P04$ was intended as Pitch + Translation. Setpoints oscillated along PX4 North (Gazebo $+Y$), producing **ENU ROLL oscillation** ($[-3.42^\circ, 2.86^\circ]$).
    - **Abrupt Braking Artifact**: The extreme peak pitch ($-43.25^\circ$ in both $P03$ and $P04$) occurred at $t = 32.5\text{s}$ when motion setpoints completed and PX4 engaged maximum position-hold braking at $14.0\text{m}$. During steady-state flight, pitch/roll dynamics remained within nominal limits.
 
-![Phase 1 Achieved Trajectories](file:///home/purab/Purab/Projects/ROS/plots/phase1_pilot_trajectories_xy.png)
+![Phase 1 Achieved Trajectories](../../../plots/phase1_pilot_trajectories_xy.png)
 
 ---
 
@@ -187,7 +187,7 @@ Metrics recomputed consistently across canonical active-motion windows (using `n
    - $P06$ (Yaw+Trans L2): Mean=13.70, Median=13.62, P95=25.26
    - $P07$ (Combined Agg L3): **Mean=23.01, Median=22.25, P95=44.18**
 
-![Pose/E Ratios Over Time](file:///home/purab/Purab/Projects/ROS/plots/phase1_pilot_pose_e_ratios.png)
+![Pose/E Ratios Over Time](../../../plots/phase1_pilot_pose_e_ratios.png)
 
 ---
 
@@ -264,7 +264,7 @@ Evaluated across canonical active windows (excluding $P05$ pure yaw):
 | **A.4** | Physical Baseline ($t_{\text{gt}}$) $\leftrightarrow$ Pose/E Ratio ($N_p / N_E$) | **+0.189** | $3.8 \times 10^{-36}$ | +0.126 | Higher physical step baseline improves cheirality depth filtering. |
 | **A.5** | Feature Velocity ($v_{\text{px}}$) $\leftrightarrow$ E Inlier Ratio ($N_E / N_m$) | **-0.351** | $4.2 \times 10^{-126}$ | +0.025 | High feature velocity degrades 5-point epipolar RANSAC agreement. |
 
-![Tier A Mechanism Link](file:///home/purab/Purab/Projects/ROS/plots/tier_a_feature_vel_vs_lk_err.png)
+![Tier A Mechanism Link](../../../plots/tier_a_feature_vel_vs_lk_err.png)
 
 ### Tier B: Predictive Precursor Links to VO Rotation Error
 
@@ -330,7 +330,7 @@ Testing candidate precursors at time $t$ against rotation error at future frames
 ## 15. Scientific Conclusions & Recommendation
 
 ### A. What the Pilot Data Establishes
-1. **Pipeline Determinism**: Un-fused monocular VO processing ([minimal_vo.py](file:///home/purab/Purab/Projects/ROS/src/minimal_vo.py)) operates with high frame-rate stability ($30.30\text{ Hz}$, $0\%$ frame drops) and robust pose update availability ($92.1\% - 97.8\%$ valid pose updates) under nominal flight severity ($L2/L3$).
+1. **Pipeline Determinism**: Un-fused monocular VO processing ([minimal_vo.py](../../../src/minimal_vo.py)) operates with high frame-rate stability ($30.30\text{ Hz}$, $0\%$ frame drops) and robust pose update availability ($92.1\% - 97.8\%$ valid pose updates) under nominal flight severity ($L2/L3$).
 2. **Physical Optical Coupling (Tier A)**: Feature velocity $v_{\text{px}}$ scales directly with rotational velocity ($\rho = +0.408, p < 10^{-172}$) and strongly drives Pyramidal LK optical flow residuals ($\rho = +0.620, p = 0.0$).
 3. **Temporal Leading Precursor**: Pyramidal LK tracking residual $\bar{e}_{\text{lk}}(t)$ acts as a reliable temporal leading indicator, forecasting frame rotation step error 2 frames ($66.0\text{ ms}$) in advance ($\rho = +0.130, p < 10^{-15}$).
 
@@ -369,8 +369,8 @@ While the physical SITL simulation and camera pipeline execution are fundamental
 
 ## Machine-Readable Summary Artifacts
 
-- **Audit Summary Dataset**: [phase1_pilot_audit_summary.csv](file:///home/purab/Purab/Projects/ROS/results/phase1_pilot_audit_summary.csv)
-- **Achieved Trajectories Plot**: [phase1_pilot_trajectories_xy.png](file:///home/purab/Purab/Projects/ROS/plots/phase1_pilot_trajectories_xy.png)
-- **Speed Profiles Plot**: [phase1_pilot_speed_profiles.png](file:///home/purab/Purab/Projects/ROS/plots/phase1_pilot_speed_profiles.png)
-- **Pose/E Ratio Plot**: [phase1_pilot_pose_e_ratios.png](file:///home/purab/Purab/Projects/ROS/plots/phase1_pilot_pose_e_ratios.png)
-- **Tier A Mechanism Plot**: [tier_a_feature_vel_vs_lk_err.png](file:///home/purab/Purab/Projects/ROS/plots/tier_a_feature_vel_vs_lk_err.png)
+- **Audit Summary Dataset**: [phase1_pilot_audit_summary.csv](../../../results/phase1_pilot_audit_summary.csv)
+- **Achieved Trajectories Plot**: [phase1_pilot_trajectories_xy.png](../../../plots/phase1_pilot_trajectories_xy.png)
+- **Speed Profiles Plot**: [phase1_pilot_speed_profiles.png](../../../plots/phase1_pilot_speed_profiles.png)
+- **Pose/E Ratio Plot**: [phase1_pilot_pose_e_ratios.png](../../../plots/phase1_pilot_pose_e_ratios.png)
+- **Tier A Mechanism Plot**: [tier_a_feature_vel_vs_lk_err.png](../../../plots/tier_a_feature_vel_vs_lk_err.png)

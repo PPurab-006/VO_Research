@@ -23,6 +23,6 @@ All milestones across Phase 0, Phase 1, Phase 2, and Phase 3 are complete and ve
 
 ## Key Artifact References
 
-1. **Phase 3 Controlled Experiment Report**: [results/reports/phase3/phase3_controlled_experiment_report.md](file:///home/purab/Purab/Projects/ROS/results/reports/phase3/phase3_controlled_experiment_report.md)
-2. **Master Technical Journal**: [docs/failure_log.md](file:///home/purab/Purab/Projects/ROS/docs/failure_log.md)
-3. **Research Methodology**: [docs/methodology.md](file:///home/purab/Purab/Projects/ROS/docs/methodology.md)
+1. **Phase 3 Controlled Experiment Report**: [results/reports/phase3/phase3_controlled_experiment_report.md](../results/reports/phase3/phase3_controlled_experiment_report.md)
+2. **Master Technical Journal**: [docs/failure_log.md](../docs/failure_log.md)
+3. **Research Methodology**: [docs/methodology.md](../docs/methodology.md)

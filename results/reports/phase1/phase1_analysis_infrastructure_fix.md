@@ -11,9 +11,9 @@
 
 | File Name | Functions / Components Modified | Purpose & Engineering Rationale |
 | :--- | :--- | :--- |
-| [src/record_ground_truth.py](file:///home/purab/Purab/Projects/ROS/src/record_ground_truth.py) | `LiveGroundTruthRecorder.__init__`, `pose_callback` | **Enforced ROS Sim Time**: Added `self.set_parameters([Parameter('use_sim_time', Parameter.Type.BOOL, True)])`. When Gazebo TFMessage header timestamps are unpopulated ($0, 0$), the node falls back directly to `self.get_clock().now().to_msg()`, obtaining ROS simulation time from `/clock`. Completely removed wall-clock `time.time()` fallback. |
-| [src/analyze_phase1_gt.py](file:///home/purab/Purab/Projects/ROS/src/analyze_phase1_gt.py) | `get_canonical_active_window`, `compute_clean_derivatives`, `euler_from_quaternion`, `analyze_flight_run` | **Analysis Engine Overhaul**:  <br>1. Implemented `get_canonical_active_window` for timestamp-based active motion windowing.<br>2. Implemented `compute_clean_derivatives` with $dt < 2.0\text{ms}$ masking, `NaN` invalid interval assignment (no previous-value persistence), and angle unwrapping.<br>3. Enforced explicit frame-aware attitude terminology (`ENU roll`, `ENU pitch`, `ENU yaw`).<br>4. Recomputed VO metrics with explicit unit-scale translation vector labels (`||t|| = 1.0`).<br>5. Implemented GT-referenced frame-to-frame rotation error evaluation over overlapping active intervals. |
-| [scratch/historical_regression_test.py](file:///home/purab/Purab/Projects/ROS/scratch/historical_regression_test.py) | `run_regression_test` | **Automated Regression Test & Assertions**: Created automated test suite verifying clean derivatives, monotonic timestamps, $P01$ short duration flag, and $P05$ pure yaw classification against historical $P01$–$P08$ CSVs. |
+| [src/record_ground_truth.py](../../../src/record_ground_truth.py) | `LiveGroundTruthRecorder.__init__`, `pose_callback` | **Enforced ROS Sim Time**: Added `self.set_parameters([Parameter('use_sim_time', Parameter.Type.BOOL, True)])`. When Gazebo TFMessage header timestamps are unpopulated ($0, 0$), the node falls back directly to `self.get_clock().now().to_msg()`, obtaining ROS simulation time from `/clock`. Completely removed wall-clock `time.time()` fallback. |
+| [src/analyze_phase1_gt.py](../../../src/analyze_phase1_gt.py) | `get_canonical_active_window`, `compute_clean_derivatives`, `euler_from_quaternion`, `analyze_flight_run` | **Analysis Engine Overhaul**:  <br>1. Implemented `get_canonical_active_window` for timestamp-based active motion windowing.<br>2. Implemented `compute_clean_derivatives` with $dt < 2.0\text{ms}$ masking, `NaN` invalid interval assignment (no previous-value persistence), and angle unwrapping.<br>3. Enforced explicit frame-aware attitude terminology (`ENU roll`, `ENU pitch`, `ENU yaw`).<br>4. Recomputed VO metrics with explicit unit-scale translation vector labels (`||t|| = 1.0`).<br>5. Implemented GT-referenced frame-to-frame rotation error evaluation over overlapping active intervals. |
+| [scratch/historical_regression_test.py](../../../scratch/historical_regression_test.py) | `run_regression_test` | **Automated Regression Test & Assertions**: Created automated test suite verifying clean derivatives, monotonic timestamps, $P01$ short duration flag, and $P05$ pure yaw classification against historical $P01$–$P08$ CSVs. |
 
 ---
 
@@ -77,7 +77,7 @@ The `get_canonical_active_window(df_gt, df_vo, family, pilot_name)` function enf
 
 ## E. Historical Regression Verification Results
 
-The repaired analysis engine was executed against the immutable historical pilot datasets ($P01$–$P08$) via [scratch/historical_regression_test.py](file:///home/purab/Purab/Projects/ROS/scratch/historical_regression_test.py).
+The repaired analysis engine was executed against the immutable historical pilot datasets ($P01$–$P08$) via [scratch/historical_regression_test.py](../../../scratch/historical_regression_test.py).
 
 ### Before vs. After Derivative Metric Comparison Table
 
@@ -139,6 +139,6 @@ FINAL GATE: READY FOR ZERO-MOTION BASELINE
 ```
 
 **Justification**:  
-1. The analysis engine ([src/analyze_phase1_gt.py](file:///home/purab/Purab/Projects/ROS/src/analyze_phase1_gt.py)) has been fully updated and verified against historical regression tests. Derivative calculations are clean, timestamp jitter is masked, angle unwrapping is enforced, frame-aware attitude terminology is explicit, and canonical timestamp windowing is active.
-2. The recording node ([src/record_ground_truth.py](file:///home/purab/Purab/Projects/ROS/src/record_ground_truth.py)) now enforces `use_sim_time: True` and uses node simulation clock timestamps via `/clock`, ensuring future GT telemetry shares the camera simulation time domain.
+1. The analysis engine ([src/analyze_phase1_gt.py](../../../src/analyze_phase1_gt.py)) has been fully updated and verified against historical regression tests. Derivative calculations are clean, timestamp jitter is masked, angle unwrapping is enforced, frame-aware attitude terminology is explicit, and canonical timestamp windowing is active.
+2. The recording node ([src/record_ground_truth.py](../../../src/record_ground_truth.py)) now enforces `use_sim_time: True` and uses node simulation clock timestamps via `/clock`, ensuring future GT telemetry shares the camera simulation time domain.
 3. The measurement and analysis pipeline is now fully trustworthy to execute the zero-motion healthy baseline experiment.

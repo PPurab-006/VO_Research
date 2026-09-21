@@ -8,7 +8,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 300 (Achieved FPS: 30.40 Hz over 9.87s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/vo_trajectory.csv
+Output CSV Path        : ../../../results/vo_trajectory.csv
 Streak Failure (Old)   : True (First at Frame #9)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -29,7 +29,7 @@ PHASE 0E — MONOCULAR VO EXECUTION REPORT
 ======================================================================
 Tracking Pipeline      : KLT
 Total Processed Frames : 300 (Achieved FPS: 30.40 Hz over 9.87s)
-Output CSV Path        : /home/purab/Purab/Projects/ROS/results/vo_trajectory.csv
+Output CSV Path        : ../../../results/vo_trajectory.csv
 Streak Failure (Old)   : True (First at Frame #9)
 Window Failure (New)   : True (First at Frame #0)
 ----------------------------------------------------------------------
@@ -61,7 +61,7 @@ This created an **artificial bookkeeping collapse** in logged $ inliers.
 
 ## 1. Exact $ Pipeline Trace
 
-File inspected: [src/minimal_vo.py](file:///home/purab/Purab/Projects/ROS/src/minimal_vo.py)
+File inspected: [src/minimal_vo.py](../../../src/minimal_vo.py)
 
 1. **Feature Tracking (, Lines 286–296)**:
    -  tracks points.

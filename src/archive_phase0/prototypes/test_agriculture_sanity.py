@@ -16,9 +16,9 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from pymavlink import mavutil
 
-WORLD_DIR = "/home/purab/Purab/Projects/ROS/configs/gazebo_maps"
+WORLD_DIR = str(Path(__file__).resolve().parents[3] / "configs" / "gazebo_maps")
 WORLD_NAME = "default"
-PX4_DIR = "/home/purab/PX4-Autopilot"
+PX4_DIR = os.environ.get("PX4_DIR", str(Path.home() / "PX4-Autopilot"))
 MODEL = "gz_x500_mono_cam"
 SPAWN_POSE = "-30.0,-30.0,-2.4,0,0,0"
 
@@ -56,8 +56,8 @@ def main():
     os.makedirs("results", exist_ok=True)
     kill_sim()
 
-    maps_base = "/home/purab/Purab/Projects/ROS/configs/gazebo_maps"
-    collection_models = "/home/purab/Purab/Projects/ROS/configs/gazebo_models_worlds_collection-master/models"
+    maps_base = "src/configs/gazebo_maps"
+    collection_models = "src/configs/gazebo_models_worlds_collection-master/models"
     common_models = f"{maps_base}/common_models"
     
     # Put agriculture.world as default.sdf in PX4 worlds directory so PX4 opens it cleanly

@@ -3,7 +3,7 @@
 
 set -e
 
-PX4_DIR="/home/purab/PX4-Autopilot"
+PX4_DIR="~/PX4-Autopilot"
 MODEL="gz_x500_mono_cam"
 
 echo "============================================================"

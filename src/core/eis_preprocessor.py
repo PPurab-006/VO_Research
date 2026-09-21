@@ -244,6 +244,7 @@ class EISDerotator:
         """
         Computes percentage of frame area lost to border (zero-source-pixel regions) under homography warp H_cv.
         """
+        H_cv = np.asarray(H_cv, dtype=np.float64)
         mask_src = np.ones((self.height, self.width), dtype=np.uint8) * 255
         mask_dst = cv2.warpPerspective(
             mask_src, H_cv, (self.width, self.height),

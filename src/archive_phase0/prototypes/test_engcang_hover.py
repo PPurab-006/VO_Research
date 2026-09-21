@@ -34,7 +34,7 @@ def run_validation():
     
     # 1. ROS Node for dumping frames
     rclpy.init()
-    output_dir = '/home/purab/.gemini/antigravity-ide/brain/f1001f09-4342-47f8-a77f-1447d8011198'
+    output_dir = None
     camera_topic = '/world/boxworld_obstacles_tight/model/x500_mono_cam_0/link/camera_link/sensor/camera/image'
     dumper = FrameDumper(camera_topic, output_dir)
     

@@ -13,7 +13,7 @@ import numpy as np
 from pymavlink import mavutil
 from scipy.spatial.transform import Rotation as R_scipy
 
-PX4_DIR = "/home/purab/PX4-Autopilot"
+PX4_DIR = os.environ.get("PX4_DIR", str(Path.home() / "PX4-Autopilot"))
 WORLD_NAME = "boxworld_obstacles_tight"
 MODEL = "gz_x500_mono_cam"
 

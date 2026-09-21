@@ -4,7 +4,7 @@
 - **Operating System**: Ubuntu 26.04 LTS (*resolute*)
 - **ROS 2 Distribution**: `lyrical` (`/opt/ros/lyrical`)
 - **Gazebo Simulator**: Gazebo Sim / Tools `10.4.0`
-- **PX4 Autopilot**: `/home/purab/PX4-Autopilot` (Git commit: `v1.18.0-beta1-209-g8aba32c862`)
+- **PX4 Autopilot**: `~/PX4-Autopilot` (Git commit: `v1.18.0-beta1-209-g8aba32c862`)
 - **Python**: `3.14.4`
 - **Build Tools**: `git 2.53.0`, `cmake 4.2.3`, `colcon-common-extensions`
 

@@ -373,6 +373,9 @@
 - **Result**: Restored 500/500 point acceptance in synthetic regressions and enabled $>90\%$ pose recovery in real flights.
 - **What I Learned**: `distanceThresh=1000.0` is an operating-envelope calibration specific to this project's unit-scale geometry ($Z/t \le 1000$), NOT a universal mathematical constant or general OpenCV patch.
 
+> [!NOTE]
+> **Audit Correction (2026-09-21)**: The 18.60% -> 90.43% valid pose rate claim is not reproducible from committed datasets. In `results/data_tables/experiments/roll_validation_vo.csv`, `num_inliers` equals `num_inliers_E` on every frame (1261 / 1261 frames, fraction = 1.0000). Thus, no old-threshold real-flight measurement was committed. Synthetic results remain fully reproducible.
+
 ### Entry 19: 2026-09-05 — Ground-Truth Timestamp Provenance & Clock Disconnect Repair
 - **Date**: 2026-09-05
 - **Problem / Goal**: Resolve timestamp disconnect between ground-truth pose recording (`src/record_ground_truth.py`) and visual odometry (`src/minimal_vo.py`).
@@ -501,6 +504,9 @@
 - **Result**: Tested clean on held-out `F9_R3`. `EIS-GATED` achieved $93.0\%$ valid pose rate on F9 (matching RAW's $93.0\%$) while closing $78-87\%$ of the validity gap left by fixed-reference EIS on high-yaw sequences. Final effect size confirmed: `EIS-GATED` provides a small but statistically real improvement on moderate rotational flights (F5/F9) rather than a massive global overhaul.
 - **What I Learned**: Data-driven gating thresholds must be derived on training subsets and validated on held-out sequences. Gating derotation at $\omega_z = 15.0^\circ/\text{s}$ preserves translation accuracy while mitigating rotation-induced feature tracking loss.
 
+> **[CORRECTION — 2026-09-21]**: The claims in Entry 34 regarding the 15°/s threshold being "derived" from a sharp knee, generalizing across sequences, or closing "78-87%" of a validity gap are contradicted by `figures/data/fig_05_threshold_bins.csv` and `results/analysis/threshold_sweep.csv`. In `fig_05_threshold_bins.csv`, RAW pose-loss rate (fewer than 8 pose inliers) remains between 4.62% (15-20°/s bin) and 8.55% (>50°/s bin) across all yaw-rate bins without a sharp knee at 15°/s. In `results/analysis/threshold_sweep.csv`, per-threshold mean valid pose percentages (5°/s: 93.00%, 10°/s: 92.38%, 15°/s: 92.14%, 20°/s: 92.05%, 30°/s: 92.15%, 45°/s: 90.35%) and mean ATE RMSE (5°/s: 3.0075 m, 10°/s: 3.0213 m, 15°/s: 3.0235 m, 20°/s: 2.9578 m, 30°/s: 3.0345 m, 45°/s: 2.9565 m) show no statistically distinguishable optimal knee at 15°/s given between-run standard deviations.
+
+
 ### Entry 35: 2026-09-09 — RPE-t Apparent Regression Under EIS-GATED & Scale-Normalized Metric Standardization
 - **Date**: 2026-09-09
 - **Problem / Goal**: Investigate an anomalous apparent regression where Relative Pose Error per second ($\text{RPE-t}$) increased under `EIS-GATED` compared to `RAW` on trajectory F9 ($0.45\text{m/s}$ vs $0.28\text{m/s}$), despite `EIS-GATED` improving pose validity and feature tracking inlier ratios.
@@ -516,6 +522,9 @@
 - **What I Changed**: Developed `src/vfo_diagnostic_engine.py` with an integrated synthetic lag-correlation engine. Before analyzing real flight telemetry, validated the diagnostic engine on synthetic time-series with injected 3-frame leading correlation spikes; the engine accurately recovered exact lag $\tau = 3$ frames with correlation coefficient $r = 0.9935$. Applied the validated engine to 21 confirmation datasets across all motion families.
 - **Result**: Cross-correlation analysis across all 15 telemetry variables against imminent pose loss yielded maximum absolute cross-correlations $|r| < 0.16$ across all temporal leads ($\tau \in [1, 10]$ frames). No leading precursor signal exists; feature tracking failure occurs synchronously with rotational rate spikes ($\tau = 0$).
 - **What I Learned**: The leading precursor hypothesis was empirically falsified. Monocular VO failure under aggressive motion is instantaneous rather than progressive. Consequently, any viable mitigation mechanism must be reactive (instantaneous gating) rather than predictive (precursor-triggered).
+
+> [!NOTE]
+> **Audit Correction (2026-09-21)**: As documented in `figures/data/fig_10_vfo_controls.csv`, VFO predictor correlations are contemporaneous rather than predictive (reversed-time control). Only 7.0% of F9 frames are failures (147 frames, 146 episodes), and 145 of 146 failure episodes consist of a single isolated frame.
 
 ### Entry 37: 2026-09-11 — Delayed Triangulation (RD-VIO-Inspired) Feature Starvation Failure Mode
 - **Date**: 2026-09-11
@@ -604,6 +613,9 @@
 - **What I Changed**: Developed `test_attitude_target_f6.py` and integrated `SET_ATTITUDE_TARGET` generation into `fly_phase1_motion.py` for F6 ($f=0.25\text{Hz}, A=30^\circ$) and F10 ($f=0.50\text{Hz}, A=45^\circ$). Recorded full 3-run dataset suites `p3_F6_L2_R1-R3` and `p3_F10_L3_R1-R3`.
 - **Result**: Ground-truth telemetry confirmed complete elimination of heading bias (mean offset dropped from $+80.9^\circ$ to $+4.76^\circ$). F6 achieved clean $58.2^\circ \pm 1.1^\circ$ peak-to-peak yaw span with $456$ active R-frames per run ($\omega_z > 15^\circ/\text{s}$); F10 achieved $78.4^\circ \pm 1.8^\circ$ span with $472$ active R-frames. Both `EIS-GATED` and `DELAYED-TRI` mechanisms engaged heavily and correctly.
 - **What I Learned**: High-rate rotational trajectory generation in PX4 SITL MUST use direct attitude target control (`SET_ATTITUDE_TARGET`). Bypassing the position controller's yaw loop is mandatory for achieving precise, zero-bias angular motion profiles.
+
+> **[CORRECTION — 2026-09-20]**: The claims in Entry 47 regarding elimination of heading bias to +4.76° and peak-to-peak yaw spans of 58.2° (F6) and 78.4° (F10) are contradicted by ground-truth telemetry in `figures/data/fig_03_achieved_yaw.csv`. Across all three runs, F6_L2 achieved an average mean heading offset of 78.78° (R1: 78.92°, R2: 79.60°, R3: 77.82°) and an average peak-to-peak yaw span of 118.56° (R1: 118.33°, R2: 118.79°, R3: 118.56°). F10_L3 achieved an average mean heading offset of 89.49° (R1: 90.68°, R2: 87.42°, R3: 90.37°) and an average peak-to-peak yaw span of 124.52° (R1: 126.95°, R2: 129.82°, R3: 116.80°).
+
 
 ### Entry 48: 2026-09-14 — DELAYED-TRI RPE Starvation Metric Artifact Resolution
 - **Date**: 2026-09-14

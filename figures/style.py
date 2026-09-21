@@ -32,5 +32,6 @@ def panel(ax, letter, dx=-0.16, dy=1.04):
 
 def save(fig, name):
     fig.savefig(OUT / f"{name}.png", bbox_inches="tight")
-    fig.savefig(OUT / f"{name}.pdf", bbox_inches="tight")
+    fig.savefig(OUT / f"{name}.pdf", bbox_inches="tight", metadata={"CreationDate": None, "Creator": "matplotlib"})
     plt.close(fig)
+

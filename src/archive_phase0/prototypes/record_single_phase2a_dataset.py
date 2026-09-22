@@ -15,6 +15,7 @@ import os
 import sys
 import time
 import subprocess
+from pathlib import Path
 
 WORLD_DIR = str(Path(__file__).resolve().parents[3] / "configs" / "gazebo_maps")
 WORLD_NAME = "default"

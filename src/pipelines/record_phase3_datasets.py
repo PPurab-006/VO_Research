@@ -15,7 +15,12 @@ After each raw recording, runs offline VO for all 3 mechanisms:
   3. DELAYED-TRI: gated_dt_def_a_vo.csv (min_non_r_obs = 3)
 """
 
+import os
+import sys
 import argparse
+import subprocess
+import numpy as np
+import pandas as pd
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'archive_phase0', 'prototypes')))
 from record_single_phase2a_dataset import record_dataset, kill_all_sim_processes
 

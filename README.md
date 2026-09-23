@@ -14,8 +14,32 @@ This repository provides a complete, reproducible controlled-experiment benchmar
 3. **`DELAYED-TRI`**: Rotation-decoupled feature buffering delaying 3D landmark triangulation until rotation subsides.
 
 ### Key Conclusions:
-- **`EIS-GATED` is the superior mechanism**: It matches `RAW` baseline accuracy on translation-dominant flights (F1, F2, F4: ATE $0.68 - 1.12\text{m}$, valid pose rate $>98\%$) while recovering $78-87\%$ of lost validity on coupled and rotational flights (F5, F6, F9, F10: validity $92.3\% - 94.1\%$).
-- **`DELAYED-TRI` suffers structural feature starvation**: Without inertial fusion or long-term temporal buffers, sustained yaw bursts continuously purge pending feature tracks before triangulation criteria can be met (validity collapses to $42.9\% - 55.8\%$).
+- **EIS-GATED vs. RAW is mostly a statistical wash, with one significant result that goes against it.** Of 24 paired core-matrix comparisons (n=3 each), only 1 reaches p < 0.05 -- F10_L3 valid pose %, favoring RAW (p=0.033) -- about what 24 tests would produce by chance alone. On F6_L2 (sustained in-place yaw), EIS-GATED is directionally favorable (better in 3/3 runs) but not significant at n=3 (p=0.11). On translation-dominant flights the gate is mostly inert and results are indistinguishable from RAW.
+- **DELAYED-TRI fails structurally under sustained rotation**: valid pose rate collapses to 27-56% on F5/F6/F9/F10. Its apparent RPE advantage there is substantially a zero-motion-fallback metric artifact, not a genuine accuracy gain -- see results/reports/phase3/phase3_controlled_experiment_report.md Section C.
+
+---
+
+## Key Results
+
+![RAW vs EIS-GATED on the core matrix](figures/out/fig_06_core_matrix.png)
+**Figure 6. RAW against EIS-GATED on the eight core families (three runs each).**
+
+*Dots: individual runs; lines join the same run under the two mechanisms; bars: family means. Labels give k, the number of runs (of 3) in which EIS-GATED is better, and the paired-t p-value (unadjusted). † marks F5, F9, recorded in the earlier `phase2a_` generation. Of 24 comparisons, 1 has p < 0.05: F10 pose validity, where EIS-GATED is lower in all three runs (mean difference -0.73 percentage points, p = 0.033); with 24 tests this is about what chance alone produces. F9 (yaw plus translation): ATE k = 2/3, p = 0.530; normalised RPE k = 2/3, p = 0.685. The gate bypasses derotation on 67.4%, 70.0%, 70.4% and 6.2% of analysed frames in F6, F9, F10 and F11 and on none in F1, F2, F4 and F5, where EIS-GATED derotates every frame (equivalent to INCREMENTAL): the comparison in those four families is RAW against always-on incremental EIS. EIS-GATED did not significantly improve accuracy over RAW in this study (n = 3).*
+
+![Gate threshold is a chosen operating point](figures/out/fig_05_threshold.png)
+**Figure 5. The 15 deg/s gate threshold is a chosen operating point, not an empirically derived optimum.**
+
+*(a) RAW pose-loss rate (frames with fewer than 8 pose inliers) against absolute yaw rate on F9 (three runs pooled; 95% bootstrap intervals; frame counts below). The loss rate is 4.6-8.6% in every bin and the intervals overlap; there is no knee at 15 deg/s. (b, c) Offline replay of the gate on F9 at six thresholds (dots: runs; horizontal marks: means; dashed: RAW mean). In this implementation derotation is applied when the yaw rate is at or below the threshold and bypassed above it, so a higher threshold means more frames are derotated (15.2% of frames at 5 deg/s, 70.6% at 45 deg/s). Validity falls from 93.0% to 90.3% over that range, toward the always-on INCREMENTAL value (88.2%), by less than a uniform-harm interpolation would predict. Mean ATE (2.96-3.03 m) does not separate the thresholds given a between-run standard deviation of 0.15-0.47 m. No threshold is marked as best.*
+
+![DELAYED-TRI's RPE advantage is substantially a metric artifact](figures/out/fig_08_dt_artifact.png)
+**Figure 8. Much of delayed triangulation's lower RPE comes from frames on which tracking has failed.**
+
+*F6, F9, F10; dots: runs, horizontal marks: means. (a) Pose validity: DELAYED-TRI 43.0%, 42.1% and 55.8% against 92.3%, 92.1% and 93.5% for EIS-GATED. (b) Scale-normalised RPE over the full window is lower for DELAYED-TRI (0.58, 0.45, 0.67 against 1.17, 0.90, 1.11). (c) Splitting frames by validity: on starved frames (fewer than 8 pose inliers) DELAYED-TRI's RPE is 0.27, 0.18 and 0.30, because a stale pose yields near-zero step error; on valid frames it is 1.00, 0.82 and 0.99, below EIS-GATED's (1.19, 0.89, 1.11) but computed on a much smaller and possibly easier set of frames. RPE for DELAYED-TRI must always be reported together with validity.*
+
+![VO processing pipeline: RAW and EIS-GATED](figures/out/fig_12_system_diagram.png)
+**Figure 12. Processing pipeline for RAW and EIS-GATED.**
+
+*Frames from the simulated camera (1280×960 px, 30.3 Hz measured from frame timestamps) pass through an optional EIS stage, then KLT tracking, five-point essential-matrix RANSAC and `recoverPose` (`distanceThresh` = 1000 in VO units; a frame is valid with at least 8 pose inliers). RAW omits the EIS stage. In EIS-GATED the yaw rate is computed from consecutive attitude samples and the frame is derotated by the incremental relative rotation only when the yaw rate is at or below the threshold τ (15.0 deg/s, a chosen operating point); above it the warp is the identity. Attitude is the simulator's ground-truth quaternion interpolated to frame time, not an estimated IMU attitude.*
 
 ---
 

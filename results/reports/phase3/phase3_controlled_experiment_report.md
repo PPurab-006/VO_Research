@@ -88,6 +88,18 @@ Umeyama Sim(3) alignment solves $s_{RAW}^* = 0.091651$ as the UNIQUE global mini
 
 ---
 
+## Core Findings
+
+Across 24 paired core-matrix comparisons (8 motion families x 3 metrics, n=3 repeats each), only 1 reaches p < 0.05: F10_L3 valid pose %, where EIS-GATED is lower in all three runs (mean difference -0.73 percentage points, p = 0.033) -- with 24 tests run, this is about what chance alone produces. EIS-GATED did not significantly improve accuracy over RAW in this study (n = 3).
+
+On translation-dominant flights (F1, F2, F4) and F5, the gate never bypasses derotation, so the comparison there is effectively RAW against always-on incremental EIS, and results are indistinguishable from RAW in both directions. The gate bypasses derotation on 67-70% of frames in F6, F9, F10 and 6% in F11.
+
+On F6_L2 (sustained in-place yaw), EIS-GATED is better in 3 of 3 runs on valid pose rate but does not reach significance at n=3 (p=0.11) -- suggestive, not confirmed. On F9, ATE and normalized RPE both favor EIS-GATED in 2 of 3 runs (p=0.530 and p=0.685 respectively) -- also not significant.
+
+DELAYED-TRI fails structurally under sustained rotation: valid pose rate collapses to 27-56% on F5/F6/F9/F10 (see Entry 37, failure_log.md). Its lower full-window RPE on these families is substantially a metric artifact -- on starved (low-validity) frames a stale pose yields near-zero step error, while on valid frames alone its RPE is below EIS-GATED's but computed on a much smaller, possibly easier set of frames (see Section C). DELAYED-TRI RPE must always be reported together with validity.
+
+---
+
 ## SECTION A — Core Matrix (Phase-1-Validated Families: F1, F2, F4, F5, F6, F9, F10, F11)
 
 > [!NOTE]

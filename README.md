@@ -1,5 +1,9 @@
 # Robust Monocular Visual Odometry (VO) Under Agile UAV Motion
 
+[![DOI (Code)](https://zenodo.org/badge/DOI/10.5281/zenodo.22913990.svg)](https://doi.org/10.5281/zenodo.22913990)
+[![DOI (Dataset)](https://zenodo.org/badge/DOI/10.5281/zenodo.22951257.svg)](https://doi.org/10.5281/zenodo.22951257)
+[![DOI (Preprint)](https://zenodo.org/badge/DOI/10.5281/zenodo.22957691.svg)](https://doi.org/10.5281/zenodo.22957691)
+
 A ROS 2, Gazebo Sim, and PX4 SITL research framework for quantifying monocular Visual Odometry (VO) performance degradation and evaluating rotation-mitigation mechanisms during dynamic, agile multicopter flight.
 
 > **Preprint:** [Reactive Yaw-Rate Gating Does Not Significantly Improve Monocular Visual Odometry Under Agile UAV Motion](https://doi.org/10.5281/zenodo.22957691) (Zenodo, concept DOI — always resolves to latest version)

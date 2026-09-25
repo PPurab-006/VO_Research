@@ -18,5 +18,21 @@
     "PX4",
     "Gazebo",
     "reproducibility"
+  ],
+  "version": "v1.0.1",
+  "publication_date": "2026-09-25",
+  "related_identifiers": [
+    {
+      "identifier": "10.5281/zenodo.22951257",
+      "relation": "isSupplementedBy",
+      "resource_type": "dataset",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.22957691",
+      "relation": "isDocumentedBy",
+      "resource_type": "publication-preprint",
+      "scheme": "doi"
+    }
   ]
 }

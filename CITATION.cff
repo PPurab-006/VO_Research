@@ -21,4 +21,15 @@ keywords:
 - Gazebo
 - reproducibility
 license: MIT
+doi: 10.5281/zenodo.22913991
 repository-code: https://github.com/PPurab-006/VO_Research
+references:
+  - type: data
+    title: "VO_Research raw frame archive v1 (supplement to 10.5281/zenodo.22913991)"
+    authors:
+    - family-names: Sen
+      given-names: Purab
+      orcid: https://orcid.org/0009-0002-8385-1435
+    doi: 10.5281/zenodo.22951257
+    license: CC-BY-4.0
+    url: https://github.com/PPurab-006/VO_Research/releases/tag/frames-data-v1

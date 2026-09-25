@@ -94,6 +94,9 @@ ROS/
 - **Autopilot**: PX4 SITL `v1.18.0-beta1-209-g8aba32c862`
 - **Python**: Python 3.10+ / 3.14 (`opencv-python` 4.10, `evo` 1.37.0, `scipy` 1.18.0, `numpy`)
 
+> [!NOTE]
+> The controlled/reference world `boxworld_obstacles_tight` (`configs/gazebo_maps`) is not vendored in this repository — it was removed as a broken gitlink with no corresponding `.gitmodules` entry (see commit `543cece`). It is only needed to re-run the `boxworld_obstacles_tight` reference-world comparison; it is not required to reproduce the primary published results, which use the `agriculture.world` benchmark exclusively. To re-fetch it, see [engcang/gazebo_maps](https://github.com/engcang/gazebo_maps) and adjust `GAZEBO_MODEL_PATH` accordingly.
+
 ---
 
 ## Primary Document References
